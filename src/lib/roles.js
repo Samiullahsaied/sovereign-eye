@@ -1,0 +1,46 @@
+export const ROLE_SLUGS = {
+  SUPER_ADMIN: 'super_admin',
+  ADMIN: 'admin',
+  OPERATIONS_OFFICER: 'operations_officer',
+  LEGAL_SUPERVISOR: 'legal_supervisor',
+  VIEWER: 'viewer'
+};
+
+export const ROLE_LABELS = {
+  [ROLE_SLUGS.SUPER_ADMIN]: 'Super Admin / ستر اډمین',
+  [ROLE_SLUGS.ADMIN]: 'System Administrator / سیستم اډمین',
+  [ROLE_SLUGS.OPERATIONS_OFFICER]: 'Operations Officer / عملیاتي مسئول',
+  [ROLE_SLUGS.LEGAL_SUPERVISOR]: 'Legal Supervisor / قانوني ناظر',
+  [ROLE_SLUGS.VIEWER]: 'Viewer / کتونکی'
+};
+
+const PAGE_ACCESS = {
+  dashboard: [ROLE_SLUGS.ADMIN, ROLE_SLUGS.OPERATIONS_OFFICER, ROLE_SLUGS.LEGAL_SUPERVISOR, ROLE_SLUGS.VIEWER],
+  cases: [ROLE_SLUGS.ADMIN, ROLE_SLUGS.OPERATIONS_OFFICER, ROLE_SLUGS.LEGAL_SUPERVISOR],
+  map: [ROLE_SLUGS.ADMIN, ROLE_SLUGS.OPERATIONS_OFFICER, ROLE_SLUGS.LEGAL_SUPERVISOR, ROLE_SLUGS.VIEWER],
+  analytics: [ROLE_SLUGS.ADMIN, ROLE_SLUGS.OPERATIONS_OFFICER, ROLE_SLUGS.LEGAL_SUPERVISOR, ROLE_SLUGS.VIEWER],
+  network: [ROLE_SLUGS.ADMIN, ROLE_SLUGS.OPERATIONS_OFFICER],
+  warrants: [ROLE_SLUGS.ADMIN, ROLE_SLUGS.LEGAL_SUPERVISOR],
+  phone: [ROLE_SLUGS.ADMIN, ROLE_SLUGS.OPERATIONS_OFFICER, ROLE_SLUGS.LEGAL_SUPERVISOR],
+  social: [ROLE_SLUGS.ADMIN, ROLE_SLUGS.OPERATIONS_OFFICER],
+  keyboard: [ROLE_SLUGS.ADMIN, ROLE_SLUGS.OPERATIONS_OFFICER],
+  privacy: [ROLE_SLUGS.ADMIN, ROLE_SLUGS.OPERATIONS_OFFICER, ROLE_SLUGS.LEGAL_SUPERVISOR, ROLE_SLUGS.VIEWER],
+  evidence: [ROLE_SLUGS.ADMIN, ROLE_SLUGS.OPERATIONS_OFFICER, ROLE_SLUGS.LEGAL_SUPERVISOR],
+  audit: [ROLE_SLUGS.ADMIN, ROLE_SLUGS.LEGAL_SUPERVISOR],
+  users: [ROLE_SLUGS.ADMIN],
+  health: [ROLE_SLUGS.ADMIN, ROLE_SLUGS.OPERATIONS_OFFICER, ROLE_SLUGS.LEGAL_SUPERVISOR, ROLE_SLUGS.VIEWER],
+  settings: [ROLE_SLUGS.ADMIN]
+};
+
+export function getRoleLabel(roleSlug) {
+  return ROLE_LABELS[roleSlug] || roleSlug || 'Unassigned';
+}
+
+export function canAccessPage(roleSlug, pageId) {
+  if (roleSlug === ROLE_SLUGS.SUPER_ADMIN) return Boolean(PAGE_ACCESS[pageId]);
+  return Boolean(PAGE_ACCESS[pageId]?.includes(roleSlug));
+}
+
+export function filterPagesForRole(items, roleSlug) {
+  return items.filter((item) => canAccessPage(roleSlug, item.id));
+}
