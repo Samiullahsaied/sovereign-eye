@@ -5,6 +5,7 @@ describe('frontend IPinfo client', () => {
   it('calls only the backend endpoint and never accepts a browser token', async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
+      headers: new Headers({ 'content-type': 'application/json; charset=utf-8' }),
       json: async () => ({ ip: '8.8.8.8', country: 'US' })
     }));
     vi.stubGlobal('fetch', fetchMock);
@@ -14,5 +15,15 @@ describe('frontend IPinfo client', () => {
       headers: { accept: 'application/json' }
     });
     expect(fetchMock.mock.calls[0][0]).not.toContain('token');
+  });
+
+  it('throws a safe message when the backend route returns HTML', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      headers: new Headers({ 'content-type': 'text/html; charset=utf-8' }),
+      text: async () => '<!doctype html>'
+    })));
+
+    await expect(lookupIpInfo('8.8.8.8')).rejects.toThrow('non-JSON response');
   });
 });

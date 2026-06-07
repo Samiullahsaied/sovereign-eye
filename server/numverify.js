@@ -57,9 +57,11 @@ export async function handleNumverifyRequest({ url, env = process.env, fetchImpl
   const key = env.NUMVERIFY_API_KEY;
   if (!key) {
     return {
-      ok: true,
-      status: 200,
+      ok: false,
+      status: 503,
       body: {
+        ok: false,
+        error: 'NUMVERIFY_API_KEY missing',
         enabled: false,
         message: 'Numverify is not configured. Local phone classification is being used.'
       }

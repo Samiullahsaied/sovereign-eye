@@ -43,6 +43,7 @@ describe('runtime deployment config', () => {
       expect(url).toBe('/api/config');
       return {
         ok: true,
+        headers: new Headers({ 'content-type': 'application/json; charset=utf-8' }),
         json: async () => ({
           supabaseUrl: 'https://example.supabase.co',
           supabaseAnonKey: 'public-anon-key',
@@ -52,6 +53,14 @@ describe('runtime deployment config', () => {
     });
 
     expect(config.authEnabled).toBe(true);
+  });
+
+  it('rejects non-JSON backend config responses before parsing', async () => {
+    await expect(loadPublicConfig(async () => ({
+      ok: true,
+      headers: new Headers({ 'content-type': 'text/html; charset=utf-8' }),
+      text: async () => '<!doctype html>'
+    }), {})).rejects.toThrow('non-JSON response');
   });
 
   it('prefers Vite public Supabase environment variables when present', async () => {

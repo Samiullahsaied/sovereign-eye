@@ -66,6 +66,12 @@ export async function loadPublicConfig(fetchImpl = fetch, env = import.meta.env 
     const response = await fetchImpl('/api/config', {
       headers: { accept: 'application/json' }
     });
+
+    const contentType = response.headers?.get?.('content-type') || '';
+    if (!contentType.toLowerCase().includes('application/json')) {
+      throw new Error('/api/config returned a non-JSON response.');
+    }
+
     const body = await response.json();
 
     if (!response.ok) {

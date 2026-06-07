@@ -8,8 +8,10 @@ describe('Numverify backend endpoint', () => {
       env: {}
     });
 
-    expect(result.status).toBe(200);
+    expect(result.status).toBe(503);
     expect(result.body).toMatchObject({
+      ok: false,
+      error: 'NUMVERIFY_API_KEY missing',
       enabled: false,
       message: expect.stringContaining('not configured')
     });

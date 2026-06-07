@@ -5,6 +5,7 @@ describe('frontend Numverify client', () => {
   it('calls only the backend endpoint and never accepts a browser API key', async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
+      headers: new Headers({ 'content-type': 'application/json; charset=utf-8' }),
       json: async () => ({
         enabled: true,
         valid: true,
@@ -29,9 +30,20 @@ describe('frontend Numverify client', () => {
   it('throws the backend quota message for quota failures', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({
       ok: false,
+      headers: new Headers({ 'content-type': 'application/json; charset=utf-8' }),
       json: async () => ({ error: 'Numverify quota exceeded. Phone validation is temporarily unavailable.' })
     })));
 
     await expect(validatePhoneWithNumverify('+14158586273')).rejects.toThrow('Numverify quota exceeded');
+  });
+
+  it('throws a safe message when Cloudflare returns HTML instead of JSON', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      headers: new Headers({ 'content-type': 'text/html; charset=utf-8' }),
+      text: async () => '<!doctype html>'
+    })));
+
+    await expect(validatePhoneWithNumverify('+14158586273')).rejects.toThrow('non-JSON response');
   });
 });
