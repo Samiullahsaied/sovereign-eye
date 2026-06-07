@@ -19,14 +19,14 @@ function mockProfileQuery(profile) {
 }
 
 describe('Supabase authentication helpers', () => {
-  it('builds a stable auth callback redirect URL', () => {
+  it('builds a stable auth redirect URL from the current site origin', () => {
     const originalLocation = globalThis.location;
     Object.defineProperty(globalThis, 'location', {
       value: { origin: 'https://sovereign-eye.pages.dev' },
       configurable: true
     });
 
-    expect(getAuthRedirectUrl()).toBe('https://sovereign-eye.pages.dev/auth/callback');
+    expect(getAuthRedirectUrl()).toBe('https://sovereign-eye.pages.dev');
 
     Object.defineProperty(globalThis, 'location', {
       value: originalLocation,
@@ -127,6 +127,11 @@ describe('Supabase authentication helpers', () => {
   });
 
   it('registers a Supabase Auth user and reads the created profile when a session is returned', async () => {
+    const originalLocation = globalThis.location;
+    Object.defineProperty(globalThis, 'location', {
+      value: { origin: 'https://sovereign-eye.pages.dev' },
+      configurable: true
+    });
     const profileQuery = mockProfileQuery({
       id: 'user-2',
       email: 'first@example.com',
@@ -144,22 +149,30 @@ describe('Supabase authentication helpers', () => {
       from: vi.fn(() => profileQuery)
     };
 
-    const result = await signUpWithSupabase(client, {
-      displayName: 'First User',
-      email: 'FIRST@example.com',
-      password: 'strong-password'
-    });
+    try {
+      const result = await signUpWithSupabase(client, {
+        displayName: 'First User',
+        email: 'FIRST@example.com',
+        password: 'strong-password'
+      });
 
-    expect(client.auth.signUp).toHaveBeenCalledWith(expect.objectContaining({
-      email: 'first@example.com',
-      password: 'strong-password',
-      options: expect.objectContaining({
-        data: { display_name: 'First User' }
-      })
-    }));
-    expect(client.from).toHaveBeenCalledWith('user_profiles');
-    expect(result.user.roleSlug).toBe('super_admin');
-    expect(result.needsEmailConfirmation).toBe(false);
+      expect(client.auth.signUp).toHaveBeenCalledWith(expect.objectContaining({
+        email: 'first@example.com',
+        password: 'strong-password',
+        options: expect.objectContaining({
+          data: { display_name: 'First User' },
+          emailRedirectTo: 'https://sovereign-eye.pages.dev'
+        })
+      }));
+      expect(client.from).toHaveBeenCalledWith('user_profiles');
+      expect(result.user.roleSlug).toBe('super_admin');
+      expect(result.needsEmailConfirmation).toBe(false);
+    } finally {
+      Object.defineProperty(globalThis, 'location', {
+        value: originalLocation,
+        configurable: true
+      });
+    }
   });
 
   it('returns an email confirmation state when sign up has no active session', async () => {
@@ -189,9 +202,9 @@ describe('Supabase authentication helpers', () => {
       }
     };
 
-    await expect(resetPasswordWithSupabase(client, 'ADMIN@example.com', 'https://app.example.com/auth/callback')).resolves.toBe(true);
+    await expect(resetPasswordWithSupabase(client, 'ADMIN@example.com', 'https://app.example.com')).resolves.toBe(true);
     expect(client.auth.resetPasswordForEmail).toHaveBeenCalledWith('admin@example.com', {
-      redirectTo: 'https://app.example.com/auth/callback'
+      redirectTo: 'https://app.example.com'
     });
   });
 

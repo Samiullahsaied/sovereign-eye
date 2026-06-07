@@ -2,7 +2,6 @@ import { getRoleLabel, ROLE_SLUGS } from './roles.js';
 
 const PROFILE_SELECT = 'id,email,display_name,status,roles:role_id(slug,label_en,label_ps)';
 const MISSING_PROFILE_TABLE_MESSAGE = 'Supabase table public.user_profiles is missing. Run supabase/migrations/20260604000001_supabase_auth_profiles.sql in the Supabase SQL Editor, then run NOTIFY pgrst, \'reload schema\'.';
-const AUTH_CALLBACK_PATH = '/auth/callback';
 
 function normalizeRole(roleRecord) {
   const role = Array.isArray(roleRecord) ? roleRecord[0] : roleRecord;
@@ -20,11 +19,8 @@ function wait(ms) {
   });
 }
 
-export function getAuthRedirectUrl(path = AUTH_CALLBACK_PATH) {
-  const origin = globalThis.location?.origin;
-  if (!origin) return undefined;
-
-  return new URL(path, `${origin}/`).href;
+export function getAuthRedirectUrl() {
+  return globalThis.location?.origin;
 }
 
 export function isMissingUserProfilesTable(error) {
