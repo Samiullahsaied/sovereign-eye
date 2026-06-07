@@ -74,6 +74,13 @@ function localEvidenceRow(action, detail) {
 export default function App() {
   const [configLoading, setConfigLoading] = useState(true);
   const [configError, setConfigError] = useState('');
+  const [configDebug, setConfigDebug] = useState({
+    VITE_SUPABASE_URL_loaded: false,
+    VITE_SUPABASE_ANON_KEY_loaded: false,
+    authEnabled: false,
+    supabaseClientInitialized: false,
+    source: 'not-loaded'
+  });
   const [supabaseClient, setSupabaseClient] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [warrant, setWarrant] = useState(null);
@@ -111,11 +118,31 @@ export default function App() {
     loadPublicConfig()
       .then((config) => {
         if (!alive) return;
-        setSupabaseClient(createSupabaseBrowserClient(config));
+        const client = createSupabaseBrowserClient(config);
+        const debug = {
+          VITE_SUPABASE_URL_loaded: Boolean(config.supabaseUrl),
+          VITE_SUPABASE_ANON_KEY_loaded: Boolean(config.supabaseAnonKey),
+          authEnabled: Boolean(config.authEnabled),
+          supabaseClientInitialized: Boolean(client),
+          source: 'public-config-loader'
+        };
+        console.info('[Sovereign Eye auth config] app init', debug);
+        setConfigDebug(debug);
+        setSupabaseClient(client);
         setConfigError('');
       })
       .catch((err) => {
         if (!alive) return;
+        const debug = {
+          VITE_SUPABASE_URL_loaded: false,
+          VITE_SUPABASE_ANON_KEY_loaded: false,
+          authEnabled: false,
+          supabaseClientInitialized: false,
+          source: 'public-config-error',
+          error: err.message || 'Unknown configuration error'
+        };
+        console.warn('[Sovereign Eye auth config] app init failed', debug);
+        setConfigDebug(debug);
         setConfigError(err.message || 'Unable to load secure configuration.');
         setSupabaseClient(null);
       })
@@ -525,6 +552,7 @@ export default function App() {
         <LoginWizard
           configLoading={configLoading}
           configError={configError}
+          configDebug={configDebug}
           supabaseClient={supabaseClient}
           onComplete={completeLogin}
         />

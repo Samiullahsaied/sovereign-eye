@@ -10,11 +10,17 @@ export function normalizePublicConfig(config = {}) {
 }
 
 export function getRuntimeEnvConfig(env = import.meta.env || {}) {
-  return normalizePublicConfig({
+  const config = normalizePublicConfig({
     supabaseUrl: env.VITE_SUPABASE_URL,
     supabaseAnonKey: env.VITE_SUPABASE_ANON_KEY,
     authEnabled: Boolean(env.VITE_SUPABASE_URL && env.VITE_SUPABASE_ANON_KEY)
   });
+  console.info('[Sovereign Eye auth config] import.meta.env', {
+    VITE_SUPABASE_URL_loaded: Boolean(env.VITE_SUPABASE_URL),
+    VITE_SUPABASE_ANON_KEY_loaded: Boolean(env.VITE_SUPABASE_ANON_KEY),
+    authEnabled: config.authEnabled
+  });
+  return config;
 }
 
 export async function loadPublicConfig(fetchImpl = fetch, env = import.meta.env || {}) {
@@ -33,8 +39,20 @@ export async function loadPublicConfig(fetchImpl = fetch, env = import.meta.env 
       throw new Error(body.error || 'Unable to load deployment configuration');
     }
 
-    return normalizePublicConfig(body);
+    const backendConfig = normalizePublicConfig(body);
+    console.info('[Sovereign Eye auth config] /api/config', {
+      VITE_SUPABASE_URL_loaded: Boolean(backendConfig.supabaseUrl),
+      VITE_SUPABASE_ANON_KEY_loaded: Boolean(backendConfig.supabaseAnonKey),
+      authEnabled: backendConfig.authEnabled
+    });
+    return backendConfig;
   } catch (error) {
+    console.warn('[Sovereign Eye auth config] /api/config failed', {
+      message: error.message,
+      VITE_SUPABASE_URL_loaded: Boolean(viteConfig.supabaseUrl),
+      VITE_SUPABASE_ANON_KEY_loaded: Boolean(viteConfig.supabaseAnonKey),
+      authEnabled: viteConfig.authEnabled
+    });
     if (isSupabaseConfigured(viteConfig)) return viteConfig;
     throw error;
   }

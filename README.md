@@ -127,6 +127,50 @@ SUPABASE_SERVICE_ROLE_KEY=your_server_only_service_role_key
 
 In Supabase Auth settings, add your deployed Vercel URL to allowed redirect URLs so password reset and email confirmation links can return to the app.
 
+## Cloudflare Pages Deployment
+
+Use these Cloudflare Pages build settings:
+
+- Framework preset: `React (Vite)` or `None`
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Root directory: repository root
+
+Add these variables in Cloudflare Pages before deploying:
+
+1. Open Cloudflare Dashboard.
+2. Go to Workers & Pages.
+3. Select the Sovereign Eye Pages project.
+4. Open Settings > Variables and Secrets.
+5. Add the variables under Production.
+6. Add the same variables under Preview if you use preview deployments.
+7. Save the variables.
+8. Redeploy the latest commit. Vite embeds `VITE_` variables during build, so changing them requires a new deployment.
+
+Required for browser Supabase Auth:
+
+```text
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_or_publishable_key
+```
+
+Backend-only provider variables:
+
+```text
+IPINFO_TOKEN=your_ipinfo_token
+NUMVERIFY_API_KEY=your_optional_numverify_key
+SUPABASE_SERVICE_ROLE_KEY=your_server_only_service_role_key
+```
+
+Do not rename the Supabase browser variables to `SUPABASE_URL` or `SUPABASE_ANON_KEY` on Cloudflare Pages. This Vite/React frontend reads only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the browser bundle.
+
+In Supabase Auth settings, add your deployed Cloudflare Pages URL to allowed redirect URLs:
+
+```text
+https://your-project.pages.dev/**
+https://your-custom-domain.example/**
+```
+
 ## Railway Deployment
 
 Use Railway when you want to run the Node backend server from `server/index.js` instead of Vercel serverless functions.

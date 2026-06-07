@@ -66,14 +66,24 @@ Verify:
 - Add all environment variables under Project Settings > Environment Variables.
 - Set variables for Production, Preview, and Development as needed.
 
-## 5. Railway Settings
+## 5. Cloudflare Pages Settings
+
+- Framework preset: `React (Vite)` or `None`
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` before deploying.
+- Add provider/backend variables only as backend/runtime values: `IPINFO_TOKEN`, `NUMVERIFY_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+- Redeploy after changing `VITE_` variables because Vite embeds them at build time.
+- Add the Cloudflare Pages URL to Supabase Auth redirect URLs.
+
+## 6. Railway Settings
 
 - Build command: `npm install && npm run build`
 - Start command: `npm run start`
 - Railway-provided `PORT` is used automatically.
 - Add all environment variables under Service > Variables.
 
-## 6. Final Security Check
+## 7. Final Security Check
 
 - No `IPINFO_TOKEN`, `NUMVERIFY_API_KEY`, or `SUPABASE_SERVICE_ROLE_KEY` appears in `dist`.
 - No backend-only secret is prefixed with `VITE_`.

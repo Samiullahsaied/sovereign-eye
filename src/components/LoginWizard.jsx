@@ -16,7 +16,7 @@ const AUTH_MODES = [
   { id: 'reset', label: 'Password reset' }
 ];
 
-export function LoginWizard({ supabaseClient, configLoading, configError, onComplete }) {
+export function LoginWizard({ supabaseClient, configLoading, configError, configDebug, onComplete }) {
   const [step, setStep] = useState(1);
   const [mode, setMode] = useState('login');
   const [credentials, setCredentials] = useState({ email: '', password: '' });
@@ -216,6 +216,14 @@ export function LoginWizard({ supabaseClient, configLoading, configError, onComp
         </div>
 
         {setupMessage && <p className="form-error">{setupMessage}</p>}
+        <div className="notice" aria-label="Supabase Auth debug information">
+          <strong>Supabase Auth debug</strong>
+          <div>VITE_SUPABASE_URL loaded: {configDebug?.VITE_SUPABASE_URL_loaded ? 'true' : 'false'}</div>
+          <div>VITE_SUPABASE_ANON_KEY loaded: {configDebug?.VITE_SUPABASE_ANON_KEY_loaded ? 'true' : 'false'}</div>
+          <div>authEnabled: {configDebug?.authEnabled ? 'true' : 'false'}</div>
+          <div>client initialized: {configDebug?.supabaseClientInitialized ? 'true' : 'false'}</div>
+          {configDebug?.source && <div>source: {configDebug.source}</div>}
+        </div>
         {success && <p className="notice">{success}</p>}
 
         {step === 1 && mode !== 'updatePassword' && (
