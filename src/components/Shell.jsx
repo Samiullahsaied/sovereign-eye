@@ -20,7 +20,8 @@ export function Shell({
   onQueryChange,
   onSearchSubmit,
   searchLoading,
-  onToggleSidebar
+  onToggleSidebar,
+  onRevokeWarrant
 }) {
   return (
     <div className="app-shell">
@@ -38,7 +39,7 @@ export function Shell({
       />
       <Sidebar activePage={activePage} items={navItems} open={sidebarOpen} onNavigate={onNavigate} onLogout={onLogout} />
       <main className="main-content">
-        <StatusBanner warrant={warrant} sessionSeconds={sessionSeconds} />
+        <StatusBanner warrant={warrant} sessionSeconds={sessionSeconds} onRevoke={onRevokeWarrant} />
         {children}
       </main>
     </div>

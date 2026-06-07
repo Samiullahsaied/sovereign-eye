@@ -9,19 +9,21 @@ export function Keystroke({ storedFingerprint, onSaveFingerprint, onHighSimilari
   const [message, setMessage] = useState('');
   const [score, setScore] = useState(null);
 
-  const save = () => {
+  const save = async () => {
     const fingerprint = createTypingFingerprint(oldSample);
     if (!fingerprint) {
       setMessage('لږ تر لږه 10 توري ولیکئ.');
       setScore(null);
       return;
     }
-    onSaveFingerprint(fingerprint);
+    if (onSaveFingerprint && !await onSaveFingerprint(fingerprint)) {
+      return;
+    }
     setMessage('نمونه ثبت شوه.');
     setScore(null);
   };
 
-  const compare = () => {
+  const compare = async () => {
     if (!storedFingerprint) {
       setMessage('لومړی پخوانۍ نمونه ثبت کړئ.');
       setScore(null);
@@ -35,7 +37,7 @@ export function Keystroke({ storedFingerprint, onSaveFingerprint, onHighSimilari
     const value = compareTypingFingerprint(storedFingerprint, newSample);
     setScore(value);
     setMessage(value >= 70 ? 'لوړ ورته والی وموندل شو.' : 'ورته والی ټیټ یا منځنی دی.');
-    if (value >= 70) onHighSimilarity(value);
+    if (value >= 70) await onHighSimilarity(value);
   };
 
   return (

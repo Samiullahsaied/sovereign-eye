@@ -47,7 +47,7 @@ function lineTypeText(lineType) {
   return LINE_TYPES_PS[lineType] || lineType || 'نامعلوم';
 }
 
-export function PhonePage({ warrant, onClassify }) {
+export function PhonePage({ warrant, onBeforeClassify, onClassify }) {
   const [phone, setPhone] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -58,6 +58,10 @@ export function PhonePage({ warrant, onClassify }) {
     const classified = classifyPhoneNumber(phone);
     if (classified.normalized.length < 5) {
       setError('شمېره لږ تر لږه 5 عددونه غواړي.');
+      return;
+    }
+
+    if (onBeforeClassify && !await onBeforeClassify()) {
       return;
     }
 
@@ -97,7 +101,7 @@ export function PhonePage({ warrant, onClassify }) {
 
       setResult(merged);
       if (merged.message) setError(merged.message);
-      onClassify(phone, merged);
+      await onClassify(phone, merged);
     } catch (err) {
       setResult(null);
       setError(err.message || 'Phone validation failed.');

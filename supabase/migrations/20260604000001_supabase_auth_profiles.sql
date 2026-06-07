@@ -21,11 +21,11 @@ alter table public.roles
 
 insert into public.roles (slug, label_en, label_ps, description)
 values
-  ('super_admin', 'Super Admin', 'ستر اډمین', 'First account owner with unrestricted platform administration'),
-  ('admin', 'System Administrator', 'سیستم اډمین', 'Platform administration and user management'),
-  ('operations_officer', 'Operations Officer', 'عملیاتي مسئول', 'Operational case and network workflows'),
-  ('legal_supervisor', 'Legal Supervisor', 'قانوني ناظر', 'Legal orders, audit review, and evidence oversight'),
-  ('viewer', 'Viewer', 'کتونکی', 'Read-only operational visibility')
+  ('super_admin', 'Super Admin', '??? ?????', 'First account owner with unrestricted platform administration'),
+  ('admin', 'System Administrator', '????? ?????', 'Platform administration and user management'),
+  ('operations_officer', 'Operations Officer', '??????? ?????', 'Operational case and network workflows'),
+  ('legal_supervisor', 'Legal Supervisor', '?????? ????', 'Legal orders, audit review, and evidence oversight'),
+  ('viewer', 'Viewer', '??????', 'Read-only operational visibility')
 on conflict (slug) do update
 set
   label_en = excluded.label_en,
@@ -48,7 +48,12 @@ create table if not exists public.orders (
   order_number text not null unique,
   order_type text not null default 'warrant',
   country text not null default 'Afghanistan',
-  status text not null default 'active' check (status in ('draft', 'active', 'expired', 'revoked', 'archived')),
+  status text not null default 'active' check (status in ('draft', 'pending', 'active', 'expired', 'revoked', 'archived')),
+  court_order_file text,
+  access_start_time timestamptz,
+  access_end_time timestamptz,
+  approved_by text,
+  legal_basis_note text,
   expires_at timestamptz,
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
@@ -100,6 +105,9 @@ create index if not exists user_profiles_status_idx on public.user_profiles(stat
 create index if not exists orders_status_idx on public.orders(status);
 create index if not exists orders_type_idx on public.orders(order_type);
 create index if not exists orders_created_by_idx on public.orders(created_by);
+create index if not exists orders_access_start_idx on public.orders(access_start_time);
+create index if not exists orders_access_end_idx on public.orders(access_end_time);
+create index if not exists orders_warrant_status_idx on public.orders(order_type, status, access_end_time);
 create index if not exists audit_logs_user_created_idx on public.audit_logs(user_id, created_at desc);
 create index if not exists evidence_order_created_idx on public.evidence(order_id, created_at desc);
 create index if not exists evidence_created_by_idx on public.evidence(created_by, created_at desc);

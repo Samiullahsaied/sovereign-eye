@@ -8,7 +8,12 @@ import {
   signUpWithSupabase,
   updatePasswordWithSupabase
 } from '../lib/auth.js';
-import { validateWarrant } from '../lib/validation.js';
+import {
+  WARRANT_DURATION_OPTIONS,
+  makeWarrantFromDuration,
+  toDateInputValue,
+  validateWarrantAccess
+} from '../lib/warrant.js';
 
 const AUTH_MODES = [
   { id: 'login', label: 'Login' },
@@ -23,7 +28,20 @@ export function LoginWizard({ supabaseClient, configLoading, configError, onComp
   const [registration, setRegistration] = useState({ displayName: '', email: '', password: '' });
   const [resetEmail, setResetEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [warrant, setWarrant] = useState({ number: '', expiresAt: '' });
+  const [warrant, setWarrant] = useState(() => {
+    const start = new Date();
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    return {
+      warrantNumber: '',
+      courtOrderFile: null,
+      courtOrderFileName: '',
+      accessStartTime: toDateInputValue(start),
+      accessEndTime: toDateInputValue(end),
+      durationMode: '1h',
+      approvedBy: '',
+      legalBasisNote: ''
+    };
+  });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [pendingUser, setPendingUser] = useState(null);
@@ -32,6 +50,7 @@ export function LoginWizard({ supabaseClient, configLoading, configError, onComp
   const updateCredentials = (field, value) => setCredentials((current) => ({ ...current, [field]: value }));
   const updateRegistration = (field, value) => setRegistration((current) => ({ ...current, [field]: value }));
   const updateWarrant = (field, value) => setWarrant((current) => ({ ...current, [field]: value }));
+  const updateDuration = (durationMode) => setWarrant((current) => makeWarrantFromDuration(current, durationMode));
 
   useEffect(() => {
     if (!supabaseClient) return undefined;
@@ -179,7 +198,7 @@ export function LoginWizard({ supabaseClient, configLoading, configError, onComp
 
   const submitWarrant = async (event) => {
     event.preventDefault();
-    const result = validateWarrant(warrant);
+    const result = validateWarrantAccess(warrant);
     if (!result.ok) {
       setError(result.message);
       return;
@@ -348,21 +367,73 @@ export function LoginWizard({ supabaseClient, configLoading, configError, onComp
         {step === 2 && (
           <form onSubmit={submitWarrant} className="form-grid">
             <div className="notice">
-              {pendingUser?.name} · {pendingUser?.roleLabel}
+              {pendingUser?.name} - {pendingUser?.roleLabel}
             </div>
             <label>
-              <span>حکم نمبر</span>
-              <input value={warrant.number} onChange={(event) => updateWarrant('number', event.target.value)} placeholder="W-2026-001" disabled={submitting} />
+              <span>Warrant number</span>
+              <input value={warrant.warrantNumber} onChange={(event) => updateWarrant('warrantNumber', event.target.value)} placeholder="W-2026-001" disabled={submitting} required />
             </label>
             <label>
-              <span>د پای نېټه</span>
+              <span>Court order file</span>
               <input
-                value={warrant.expiresAt}
-                onChange={(event) => updateWarrant('expiresAt', event.target.value)}
-                placeholder="2026-12-31"
-                inputMode="numeric"
-                pattern="\d{4}-\d{2}-\d{2}"
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
+                onChange={(event) => {
+                  const file = event.target.files?.[0] || null;
+                  setWarrant((current) => ({
+                    ...current,
+                    courtOrderFile: file,
+                    courtOrderFileName: file?.name || ''
+                  }));
+                }}
                 disabled={submitting}
+                required
+              />
+            </label>
+            <label>
+              <span>Access duration</span>
+              <select value={warrant.durationMode} onChange={(event) => updateDuration(event.target.value)} disabled={submitting}>
+                {WARRANT_DURATION_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>{option.label}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Access start time</span>
+              <input
+                value={warrant.accessStartTime}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setWarrant((current) => makeWarrantFromDuration({ ...current, accessStartTime: value }, current.durationMode));
+                }}
+                type="datetime-local"
+                disabled={submitting}
+                required
+              />
+            </label>
+            <label>
+              <span>Access end time</span>
+              <input
+                value={warrant.accessEndTime}
+                onChange={(event) => updateWarrant('accessEndTime', event.target.value)}
+                type="datetime-local"
+                disabled={submitting || warrant.durationMode !== 'custom'}
+                required
+              />
+            </label>
+            <label>
+              <span>Approved by</span>
+              <input value={warrant.approvedBy} onChange={(event) => updateWarrant('approvedBy', event.target.value)} placeholder="Approving authority" disabled={submitting} required />
+            </label>
+            <label>
+              <span>Legal basis note</span>
+              <textarea
+                value={warrant.legalBasisNote}
+                onChange={(event) => updateWarrant('legalBasisNote', event.target.value)}
+                placeholder="Brief legal basis for this access window"
+                rows={3}
+                disabled={submitting}
+                required
               />
             </label>
             {error && <p className="form-error">{error}</p>}

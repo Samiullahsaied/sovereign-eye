@@ -10,6 +10,7 @@ import {
   signUpWithSupabase,
   updatePasswordWithSupabase
 } from './auth.js';
+import { getRoleLabel } from './roles.js';
 
 function mockProfileQuery(profile) {
   const single = vi.fn().mockResolvedValue({ data: profile, error: null });
@@ -44,7 +45,7 @@ describe('Supabase authentication helpers', () => {
     });
 
     expect(user.roleSlug).toBe('operations_officer');
-    expect(user.roleLabel).toBe('Operations Officer / عملیاتي مسئول');
+    expect(user.roleLabel).toBe(getRoleLabel('operations_officer'));
   });
 
   it('signs in with Supabase Auth and then reads the database profile', async () => {

@@ -5,6 +5,15 @@ export function sanitizeText(value) {
     .trim();
 }
 
+function parseDateInput(value) {
+  if (!value) return null;
+  const normalized = String(value).trim();
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(normalized)
+    ? new Date(`${normalized}T23:59:59`)
+    : new Date(normalized);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 export function validateWarrant({ number, expiresAt }) {
   const cleanNumber = sanitizeText(number);
 
@@ -16,8 +25,8 @@ export function validateWarrant({ number, expiresAt }) {
     return { ok: false, message: 'د حکم د پای نېټه اړینه ده.' };
   }
 
-  const expiry = new Date(`${expiresAt}T23:59:59`);
-  if (Number.isNaN(expiry.getTime())) {
+  const expiry = parseDateInput(expiresAt);
+  if (!expiry) {
     return { ok: false, message: 'د پای نېټه سمه نه ده.' };
   }
 

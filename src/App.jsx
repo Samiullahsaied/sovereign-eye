@@ -9,6 +9,7 @@ import { lookupIpInfo } from './lib/ipinfo.js';
 import { canAccessPage, filterPagesForRole } from './lib/roles.js';
 import { loadPublicConfig } from './lib/runtimeConfig.js';
 import { createSupabaseBrowserClient } from './lib/supabaseClient.js';
+import { getWarrantStatus, isWarrantActive, WARRANT_STATUS } from './lib/warrant.js';
 import {
   deleteOrder,
   acknowledgeAlert,
@@ -40,9 +41,11 @@ const SettingsPage = lazy(() => import('./pages/Settings.jsx').then((module) => 
 const Social = lazy(() => import('./pages/Social.jsx').then((module) => ({ default: module.Social })));
 const UsersPage = lazy(() => import('./pages/Users.jsx').then((module) => ({ default: module.UsersPage })));
 const Warrants = lazy(() => import('./pages/Warrants.jsx').then((module) => ({ default: module.Warrants })));
+const Assistant = lazy(() => import('./pages/Assistant.jsx').then((module) => ({ default: module.Assistant })));
 
 const SESSION_LENGTH = 1800;
 const IDLE_LENGTH = 900;
+const SENSITIVE_PAGES = new Set(['cases', 'map', 'analytics', 'network', 'warrants', 'phone', 'social', 'keyboard', 'evidence', 'audit', 'assistant']);
 
 function makeId(prefix) {
   return `${prefix}-${globalThis.crypto?.randomUUID?.() || Date.now().toString(36)}`;
@@ -100,6 +103,7 @@ export default function App() {
   const [dashboardStats, setDashboardStats] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [dataLoading, setDataLoading] = useState(false);
+  const [expiryLoggedFor, setExpiryLoggedFor] = useState('');
 
   const navItems = useMemo(() => (
     currentUser ? filterPagesForRole(NAV_ITEMS, currentUser.roleSlug) : []
@@ -189,6 +193,15 @@ export default function App() {
     }
   }, [currentUser, showToast, supabaseClient]);
 
+  const requireActiveWarrant = useCallback(async (actionLabel) => {
+    if (isWarrantActive(warrant)) return true;
+    const status = getWarrantStatus(warrant);
+    const detail = `${actionLabel} blocked. Access status: ${status}.`;
+    showToast('Access window is not active. Sensitive action blocked.', 'warn');
+    await recordAudit('user attempted access after expiry', detail);
+    return false;
+  }, [recordAudit, showToast, warrant]);
+
   const recordEvidence = useCallback(async (action, detail, userOverride = currentUser) => {
     const localRow = localEvidenceRow(action, detail);
     setEvidence((items) => [localRow, ...items].slice(0, 200));
@@ -228,6 +241,7 @@ export default function App() {
   }, [currentUser, recordAudit, showToast, supabaseClient]);
 
   const runDashboardSearch = useCallback(async () => {
+    if (!await requireActiveWarrant('IPinfo lookup')) return;
     const ip = sanitizeText(query);
     if (!ip) {
       setIpLookup({ loading: false, error: 'Enter an IP address to search.', result: null });
@@ -259,7 +273,7 @@ export default function App() {
       showToast(message, 'warn');
       await recordAudit('IPinfo lookup failed', `${ip}: ${message}`);
     }
-  }, [currentUser, query, recordAudit, refreshData, showToast, supabaseClient]);
+  }, [currentUser, query, recordAudit, refreshData, requireActiveWarrant, showToast, supabaseClient]);
 
   const logout = useCallback(async () => {
     if (supabaseClient && currentSessionId) {
@@ -282,6 +296,7 @@ export default function App() {
     setTrafficData([]);
     setDashboardStats([]);
     setCurrentSessionId(null);
+    setExpiryLoggedFor('');
   }, [currentSessionId, supabaseClient]);
 
   useEffect(() => {
@@ -319,13 +334,17 @@ export default function App() {
     setCurrentUser(user);
     setWarrant(legalWarrant);
     setSessionSeconds(SESSION_LENGTH);
+    setExpiryLoggedFor('');
     showToast('ننوتل بریالي شول.');
 
     if (supabaseClient) {
       try {
         const { data, error } = await insertUserSession(supabaseClient, user.id, null, {
           event: 'login_complete',
-          warrantNumber: legalWarrant.number
+          warrantNumber: legalWarrant.number,
+          accessStartTime: legalWarrant.accessStartTime,
+          accessEndTime: legalWarrant.accessEndTime,
+          accessStatus: legalWarrant.status
         });
         if (!error) setCurrentSessionId(data.id);
       } catch {
@@ -338,8 +357,14 @@ export default function App() {
         const { error } = await insertOrder(supabaseClient, user.id, 'warrant', {
           orderNumber: legalWarrant.number,
           title: 'Active legal order',
+          courtOrderFileName: legalWarrant.courtOrderFileName,
+          accessStartTime: legalWarrant.accessStartTime,
+          accessEndTime: legalWarrant.accessEndTime,
+          approvedBy: legalWarrant.approvedBy,
+          legalBasisNote: legalWarrant.legalBasisNote,
+          status: legalWarrant.status.toLowerCase(),
           expiresAt: legalWarrant.expiresAt,
-          priority: 'لوړ'
+          priority: 'High'
         });
         if (error) throw error;
       } catch {
@@ -347,13 +372,19 @@ export default function App() {
       }
     }
 
+    await recordAudit('warrant uploaded', legalWarrant.courtOrderFileName, user);
+    await recordAudit('warrant approved', `${legalWarrant.number} · ${legalWarrant.approvedBy}`, user);
+    await recordAudit('access started', legalWarrant.number, user);
     await recordAudit('ننوتل', legalWarrant.number, user);
     await recordEvidence('قانوني ننوتل', `${user.name} · ${legalWarrant.number}`, user);
   };
 
-  const navigate = (pageId) => {
+  const navigate = async (pageId) => {
     if (currentUser && !canAccessPage(currentUser.roleSlug, pageId)) {
       showToast('ستاسو رول دې برخې ته اجازه نه لري.', 'warn');
+      return;
+    }
+    if (currentUser && SENSITIVE_PAGES.has(pageId) && !await requireActiveWarrant(`open ${pageId}`)) {
       return;
     }
     setActivePage(pageId);
@@ -361,6 +392,7 @@ export default function App() {
   };
 
   const addOrderBackedItem = async (type, payload, successMessage) => {
+    if (!await requireActiveWarrant(`create ${type}`)) return false;
     if (!supabaseClient || !currentUser) {
       showToast('Supabase connection is required for this action.', 'warn');
       return false;
@@ -378,6 +410,7 @@ export default function App() {
   };
 
   const removeOrderBackedItem = async (id, auditAction) => {
+    if (!await requireActiveWarrant(auditAction)) return false;
     if (!supabaseClient) {
       showToast('Supabase connection is required for this action.', 'warn');
       return false;
@@ -405,6 +438,25 @@ export default function App() {
       await upsertSetting(supabaseClient, 'ui.theme', { value }, currentUser.id);
     }
   };
+
+  const revokeAccess = useCallback(async () => {
+    if (!warrant) return;
+    setWarrant({ ...warrant, status: WARRANT_STATUS.REVOKED });
+    showToast('Legal access has been revoked.', 'warn');
+    await recordAudit('access revoked', warrant.number);
+  }, [recordAudit, showToast, warrant]);
+
+  useEffect(() => {
+    if (!currentUser || !warrant) return;
+
+    const status = getWarrantStatus(warrant);
+    if (status !== WARRANT_STATUS.EXPIRED || expiryLoggedFor === warrant.number) return;
+
+    setWarrant((current) => (current ? { ...current, status: WARRANT_STATUS.EXPIRED } : current));
+    setExpiryLoggedFor(warrant.number);
+    showToast('Legal access window expired. Sensitive actions are blocked.', 'warn');
+    recordAudit('access expired', warrant.number);
+  }, [currentUser, expiryLoggedFor, recordAudit, showToast, warrant]);
 
   const healthRows = useMemo(() => (
     statusRows.length > 0 ? statusRows : [
@@ -461,7 +513,7 @@ export default function App() {
         if (ok) await recordAudit('حکم ثبت', item.name);
         return ok;
       }} onRemoveWarrant={(id) => removeOrderBackedItem(id, 'حکم لرې شو')} />,
-      phone: <PhonePage warrant={warrant} onClassify={(phone, result) => {
+      phone: <PhonePage warrant={warrant} onBeforeClassify={() => requireActiveWarrant('phone classification')} onClassify={(phone, result) => {
         recordAudit('تلیفون طبقه بندي', `${phone} (${result.country})`);
         recordEvidence('تلیفون workflow', `${result.normalized} -> ${result.country}`);
       }} />,
@@ -474,20 +526,33 @@ export default function App() {
         if (ok) await recordAudit('هدف اضافه', `${item.platform}: ${item.target}`);
         return ok;
       }} onRemoveTarget={(id) => removeOrderBackedItem(id, 'هدف لرې شو')} />,
-      keyboard: <Keystroke storedFingerprint={typingFingerprint} onSaveFingerprint={(fingerprint) => {
+      keyboard: <Keystroke storedFingerprint={typingFingerprint} onSaveFingerprint={async (fingerprint) => {
+        if (!await requireActiveWarrant('typing fingerprint capture')) return false;
         setTypingFingerprint(fingerprint);
-        recordAudit('کیبورډ نمونه', 'Typing fingerprint captured for this session');
-        showToast('نمونه د اوسني session لپاره ثبت شوه.');
-      }} onHighSimilarity={(score) => pushAlert(`کیبورډ ورته والی ${score}%`)} />,
+        recordAudit('typing fingerprint captured', 'Typing fingerprint captured for this session');
+        showToast('Typing sample saved for this session.');
+        return true;
+      }} onHighSimilarity={async (score) => {
+        if (!await requireActiveWarrant('typing similarity alert')) return;
+        pushAlert(`Typing similarity ${score}%`);
+      }} />,
       privacy: <Privacy />,
       evidence: <Evidence evidence={evidence} />,
-      audit: <Audit auditLog={auditLog} onClearAudit={() => {
+      audit: <Audit auditLog={auditLog} onClearAudit={async () => {
+        if (!await requireActiveWarrant('clear audit view')) return;
         setAuditLog([]);
         recordAudit('Audit view cleared', 'Visible audit rows were cleared locally; Supabase records remain retained.');
         showToast('Visible audit rows cleared locally.', 'warn');
       }} />,
       users: <UsersPage users={users} />,
       health: <Health statusRows={healthRows} />,
+      assistant: <Assistant
+        alerts={alerts}
+        auditLog={auditLog}
+        statusRows={healthRows}
+        warrant={warrant}
+        onApprovalRequest={(result) => recordAudit('AI approval requested', `${result.action} - ${result.riskLevel}`)}
+      />,
       settings: <SettingsPage lang={lang} theme={theme} settingsRows={settingsRows} onLangChange={changeLang} onThemeChange={changeTheme} onReset={() => {
         clearAppStorage();
         setTypingFingerprint(null);
@@ -505,9 +570,12 @@ export default function App() {
     evidence,
     healthRows,
     lang,
+    pushAlert,
     query,
     recordAudit,
     recordEvidence,
+    refreshData,
+    requireActiveWarrant,
     settingsRows,
     showToast,
     supabaseClient,
@@ -554,6 +622,7 @@ export default function App() {
         onSearchSubmit={runDashboardSearch}
         searchLoading={ipLookup.loading}
         onToggleSidebar={() => setSidebarOpen((open) => !open)}
+        onRevokeWarrant={revokeAccess}
       >
         <Suspense fallback={<section className="card loading-card">Loading section...</section>}>
           {page}

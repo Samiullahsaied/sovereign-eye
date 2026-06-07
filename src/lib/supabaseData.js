@@ -13,11 +13,16 @@ function mapOrder(row) {
     orderType: row.order_type,
     title: metadata.title || row.order_number,
     suspect: metadata.suspect || '',
-    priority: metadata.priority || 'لوړ',
+    priority: metadata.priority || 'High',
     country: row.country,
     status: row.status,
     expiresAt: row.expires_at || '',
-    name: metadata.fileName || metadata.title || row.order_number,
+    courtOrderFileName: row.court_order_file || metadata.courtOrderFileName || metadata.fileName || '',
+    accessStartTime: row.access_start_time || metadata.accessStartTime || '',
+    accessEndTime: row.access_end_time || metadata.accessEndTime || row.expires_at || '',
+    approvedBy: row.approved_by || metadata.approvedBy || '',
+    legalBasisNote: row.legal_basis_note || metadata.legalBasisNote || '',
+    name: row.court_order_file || metadata.fileName || metadata.title || row.order_number,
     sizeLabel: metadata.sizeLabel || '',
     platform: metadata.platform || '',
     target: metadata.target || metadata.title || '',
@@ -108,16 +113,14 @@ function mapUser(row) {
     name: row.display_name || row.email,
     email: row.email,
     role: role?.slug || '',
-    roleLabel: role?.label_en && role?.label_ps ? `${role.label_en} / ${role.label_ps}` : getRoleLabel(role?.slug),
+    roleLabel: getRoleLabel(role?.slug),
     status: row.status
   };
 }
 
 async function safeQuery(factory, fallback) {
   const { data, error } = await factory();
-  if (error) {
-    return fallback;
-  }
+  if (error) return fallback;
   return data || fallback;
 }
 
@@ -256,8 +259,13 @@ export async function insertOrder(client, userId, orderType, payload) {
   const metadata = {
     title: sanitizeText(payload.title || payload.name || orderNumber),
     suspect: sanitizeText(payload.suspect || ''),
-    priority: payload.priority || 'لوړ',
-    fileName: sanitizeText(payload.fileName || payload.name || ''),
+    priority: payload.priority || 'High',
+    fileName: sanitizeText(payload.fileName || payload.name || payload.courtOrderFileName || ''),
+    courtOrderFileName: sanitizeText(payload.courtOrderFileName || payload.fileName || payload.name || ''),
+    accessStartTime: payload.accessStartTime || '',
+    accessEndTime: payload.accessEndTime || '',
+    approvedBy: sanitizeText(payload.approvedBy || ''),
+    legalBasisNote: sanitizeText(payload.legalBasisNote || ''),
     sizeLabel: payload.sizeLabel || '',
     platform: payload.platform || '',
     target: sanitizeText(payload.target || ''),
@@ -270,7 +278,12 @@ export async function insertOrder(client, userId, orderType, payload) {
     order_type: orderType,
     country: payload.country || 'Afghanistan',
     status: payload.status || 'active',
-    expires_at: payload.expiresAt || null,
+    court_order_file: sanitizeText(payload.courtOrderFileName || payload.fileName || payload.name || '') || null,
+    access_start_time: payload.accessStartTime || null,
+    access_end_time: payload.accessEndTime || payload.expiresAt || null,
+    approved_by: sanitizeText(payload.approvedBy || '') || null,
+    legal_basis_note: sanitizeText(payload.legalBasisNote || '') || null,
+    expires_at: payload.expiresAt || payload.accessEndTime || null,
     metadata
   }).select('*').single();
 }

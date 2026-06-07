@@ -1,4 +1,5 @@
 import {
+  Bot,
   ChartLine,
   ClipboardList,
   FolderOpen,
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 
 const ICONS = {
+  Bot,
   ChartLine,
   ClipboardList,
   FolderOpen,

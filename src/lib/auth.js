@@ -9,7 +9,7 @@ function normalizeRole(roleRecord) {
 
   return {
     slug,
-    label: role?.label_en && role?.label_ps ? `${role.label_en} / ${role.label_ps}` : getRoleLabel(slug)
+    label: getRoleLabel(slug)
   };
 }
 
