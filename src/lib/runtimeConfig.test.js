@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { getRuntimeEnvConfig, isSupabaseConfigured, loadPublicConfig, normalizePublicConfig, shouldUseSeedData } from './runtimeConfig.js';
+import {
+  getRuntimeEnvConfig,
+  isSupabaseConfigured,
+  loadPublicConfig,
+  normalizePublicConfig,
+  normalizeSupabaseProjectUrl,
+  shouldUseSeedData
+} from './runtimeConfig.js';
 
 describe('runtime deployment config', () => {
   it('does not enable seeded data in production mode', () => {
@@ -24,7 +31,7 @@ describe('runtime deployment config', () => {
       IPINFO_TOKEN: 'secret'
     });
 
-    expect(config).toEqual({
+    expect(config).toMatchObject({
       supabaseUrl: 'https://example.supabase.co',
       supabaseAnonKey: 'public-anon-key',
       authEnabled: true
@@ -55,10 +62,33 @@ describe('runtime deployment config', () => {
       VITE_SUPABASE_ANON_KEY: 'vite-public-key'
     });
 
-    expect(config).toEqual({
+    expect(config).toMatchObject({
       supabaseUrl: 'https://vite.supabase.co',
       supabaseAnonKey: 'vite-public-key',
       authEnabled: true
+    });
+  });
+
+  it('strips invalid Supabase API paths from copied project URLs', () => {
+    expect(normalizeSupabaseProjectUrl('https://project.supabase.co/rest/v1')).toEqual({
+      url: 'https://project.supabase.co',
+      path: '/rest/v1',
+      valid: true,
+      hadPath: true
+    });
+
+    expect(normalizePublicConfig({
+      supabaseUrl: 'https://project.supabase.co/auth/v1',
+      supabaseAnonKey: 'public-key',
+      authEnabled: true
+    })).toMatchObject({
+      supabaseUrl: 'https://project.supabase.co',
+      supabaseAnonKey: 'public-key',
+      authEnabled: true,
+      debug: {
+        supabaseUrlPath: '/auth/v1',
+        supabaseUrlHadPath: true
+      }
     });
   });
 

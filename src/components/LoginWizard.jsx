@@ -222,6 +222,8 @@ export function LoginWizard({ supabaseClient, configLoading, configError, config
           <div>VITE_SUPABASE_ANON_KEY loaded: {configDebug?.VITE_SUPABASE_ANON_KEY_loaded ? 'true' : 'false'}</div>
           <div>authEnabled: {configDebug?.authEnabled ? 'true' : 'false'}</div>
           <div>client initialized: {configDebug?.supabaseClientInitialized ? 'true' : 'false'}</div>
+          <div>Supabase URL path: {configDebug?.supabaseUrlPath || 'not loaded'}</div>
+          <div>Supabase URL had invalid path: {configDebug?.supabaseUrlHadPath ? 'true' : 'false'}</div>
           {configDebug?.source && <div>source: {configDebug.source}</div>}
         </div>
         {success && <p className="notice">{success}</p>}

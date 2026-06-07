@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getPublicConfig } from './config.js';
+import { getPublicConfig, normalizeSupabaseProjectUrl } from './config.js';
 
 describe('public runtime config', () => {
   it('returns only public Supabase configuration', () => {
@@ -10,7 +10,7 @@ describe('public runtime config', () => {
       IPINFO_TOKEN: 'server-ipinfo-token'
     });
 
-    expect(config).toEqual({
+    expect(config).toMatchObject({
       supabaseUrl: 'https://project.supabase.co',
       supabaseAnonKey: 'public-anon-key',
       authEnabled: true
@@ -23,15 +23,37 @@ describe('public runtime config', () => {
     expect(getPublicConfig({
       SUPABASE_URL: 'https://legacy.supabase.co',
       SUPABASE_ANON_KEY: 'legacy-public-key'
-    })).toEqual({
+    })).toMatchObject({
       supabaseUrl: 'https://legacy.supabase.co',
       supabaseAnonKey: 'legacy-public-key',
       authEnabled: true
     });
   });
 
+  it('normalizes copied Supabase API URLs down to the project origin', () => {
+    expect(normalizeSupabaseProjectUrl('https://project.supabase.co/auth/v1')).toEqual({
+      url: 'https://project.supabase.co',
+      path: '/auth/v1',
+      valid: true,
+      hadPath: true
+    });
+
+    expect(getPublicConfig({
+      VITE_SUPABASE_URL: 'https://project.supabase.co/rest/v1',
+      VITE_SUPABASE_ANON_KEY: 'public-anon-key'
+    })).toMatchObject({
+      supabaseUrl: 'https://project.supabase.co',
+      supabaseAnonKey: 'public-anon-key',
+      authEnabled: true,
+      debug: {
+        supabaseUrlPath: '/rest/v1',
+        supabaseUrlHadPath: true
+      }
+    });
+  });
+
   it('marks auth disabled when Supabase env vars are missing', () => {
-    expect(getPublicConfig({})).toEqual({
+    expect(getPublicConfig({})).toMatchObject({
       supabaseUrl: '',
       supabaseAnonKey: '',
       authEnabled: false

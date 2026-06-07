@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   fetchUserProfile,
+  getAuthRedirectUrl,
   getCurrentSessionUser,
   isMissingUserProfilesTable,
   normalizeUserProfile,
@@ -18,6 +19,21 @@ function mockProfileQuery(profile) {
 }
 
 describe('Supabase authentication helpers', () => {
+  it('builds a stable auth callback redirect URL', () => {
+    const originalLocation = globalThis.location;
+    Object.defineProperty(globalThis, 'location', {
+      value: { origin: 'https://sovereign-eye.pages.dev' },
+      configurable: true
+    });
+
+    expect(getAuthRedirectUrl()).toBe('https://sovereign-eye.pages.dev/auth/callback');
+
+    Object.defineProperty(globalThis, 'location', {
+      value: originalLocation,
+      configurable: true
+    });
+  });
+
   it('normalizes database roles into app roles', () => {
     const user = normalizeUserProfile({
       id: 'user-1',
@@ -173,9 +189,9 @@ describe('Supabase authentication helpers', () => {
       }
     };
 
-    await expect(resetPasswordWithSupabase(client, 'ADMIN@example.com', 'https://app.example.com')).resolves.toBe(true);
+    await expect(resetPasswordWithSupabase(client, 'ADMIN@example.com', 'https://app.example.com/auth/callback')).resolves.toBe(true);
     expect(client.auth.resetPasswordForEmail).toHaveBeenCalledWith('admin@example.com', {
-      redirectTo: 'https://app.example.com'
+      redirectTo: 'https://app.example.com/auth/callback'
     });
   });
 

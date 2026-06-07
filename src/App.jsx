@@ -79,6 +79,8 @@ export default function App() {
     VITE_SUPABASE_ANON_KEY_loaded: false,
     authEnabled: false,
     supabaseClientInitialized: false,
+    supabaseUrlPath: '',
+    supabaseUrlHadPath: false,
     source: 'not-loaded'
   });
   const [supabaseClient, setSupabaseClient] = useState(null);
@@ -124,6 +126,8 @@ export default function App() {
           VITE_SUPABASE_ANON_KEY_loaded: Boolean(config.supabaseAnonKey),
           authEnabled: Boolean(config.authEnabled),
           supabaseClientInitialized: Boolean(client),
+          supabaseUrlPath: config.debug?.supabaseUrlPath || '',
+          supabaseUrlHadPath: Boolean(config.debug?.supabaseUrlHadPath),
           source: 'public-config-loader'
         };
         console.info('[Sovereign Eye auth config] app init', debug);
@@ -138,6 +142,8 @@ export default function App() {
           VITE_SUPABASE_ANON_KEY_loaded: false,
           authEnabled: false,
           supabaseClientInitialized: false,
+          supabaseUrlPath: '',
+          supabaseUrlHadPath: false,
           source: 'public-config-error',
           error: err.message || 'Unknown configuration error'
         };
