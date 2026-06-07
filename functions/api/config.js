@@ -29,14 +29,7 @@ function publicConfig(env = {}) {
   return {
     supabaseUrl: supabaseProjectUrl.url,
     supabaseAnonKey,
-    authEnabled: Boolean(supabaseProjectUrl.url && supabaseAnonKey),
-    debug: {
-      supabaseUrlLoaded: Boolean(rawSupabaseUrl),
-      supabaseAnonKeyLoaded: Boolean(supabaseAnonKey),
-      supabaseUrlValid: supabaseProjectUrl.valid,
-      supabaseUrlPath: supabaseProjectUrl.path,
-      supabaseUrlHadPath: supabaseProjectUrl.hadPath
-    }
+    authEnabled: Boolean(supabaseProjectUrl.url && supabaseAnonKey)
   };
 }
 

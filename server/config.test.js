@@ -44,11 +44,7 @@ describe('public runtime config', () => {
     })).toMatchObject({
       supabaseUrl: 'https://project.supabase.co',
       supabaseAnonKey: 'public-anon-key',
-      authEnabled: true,
-      debug: {
-        supabaseUrlPath: '/rest/v1',
-        supabaseUrlHadPath: true
-      }
+      authEnabled: true
     });
   });
 

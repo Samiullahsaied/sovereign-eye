@@ -1,4 +1,4 @@
--- Sovereign Eye v4 live operational data
+-- Sovereign Eye live operational data
 -- Run after 20260604000001_supabase_auth_profiles.sql.
 
 create table if not exists public.traffic_records (

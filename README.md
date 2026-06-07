@@ -1,6 +1,6 @@
-# Sovereign Eye v4
+# Sovereign Eye
 
-Sovereign Eye v4 is a Vite + React legal operations dashboard with Supabase Auth, role-based access control, Supabase-backed operational records, and backend-only IPinfo lookup. The original RTL/Pashto command-center design direction is preserved.
+Sovereign Eye is a Vite + React legal operations dashboard with Supabase Auth, role-based access control, Supabase-backed operational records, and backend-only IPinfo lookup. The original RTL/Pashto command-center design direction is preserved.
 
 ## Local Requirements
 

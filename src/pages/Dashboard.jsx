@@ -90,7 +90,7 @@ export function Dashboard({ cases, trafficData, alerts, dataLoading, ipLookup, d
           <MapContainer className="map-container" center={[31.6289, 65.7372]} zoom={14} scrollWheelZoom={false}>
             <TileLayer attribution="CartoDB" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
             <CircleMarker center={[31.6289, 65.7372]} radius={10} pathOptions={{ color: '#fff', fillColor: '#C8A427', fillOpacity: 0.9 }}>
-              <Popup>Camera endpoint not configured</Popup>
+              <Popup>Secure camera feed pending authorization</Popup>
             </CircleMarker>
           </MapContainer>
         </Card>

@@ -1,4 +1,4 @@
-# Sovereign Eye v4 Deployment Checklist
+# Sovereign Eye Deployment Checklist
 
 Use this checklist before deploying to Vercel or Railway.
 
@@ -49,7 +49,7 @@ npm test
 
 Verify:
 
-- Login page does not show `Supabase Auth is not configured`.
+- Login page does not show developer configuration details.
 - Register works with a real Supabase email account.
 - Login works with a confirmed Supabase account.
 - Logout clears the session.

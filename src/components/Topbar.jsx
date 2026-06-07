@@ -23,7 +23,7 @@ export function Topbar({
     <header className="topbar">
       <div className="brand">
         <span className="brand-mark">◎</span>
-        <span>Sovereign Eye v4</span>
+        <span>Sovereign Eye</span>
       </div>
       <form className="search-box" onSubmit={submitSearch} role="search">
         <span className="sr-only">Search dashboard data</span>

@@ -16,7 +16,7 @@ const AUTH_MODES = [
   { id: 'reset', label: 'Password reset' }
 ];
 
-export function LoginWizard({ supabaseClient, configLoading, configError, configDebug, onComplete }) {
+export function LoginWizard({ supabaseClient, configLoading, configError, onComplete }) {
   const [step, setStep] = useState(1);
   const [mode, setMode] = useState('login');
   const [credentials, setCredentials] = useState({ email: '', password: '' });
@@ -197,9 +197,9 @@ export function LoginWizard({ supabaseClient, configLoading, configError, config
     }
   };
 
-  const setupMessage = configLoading
-    ? 'Loading secure configuration...'
-    : configError || (!supabaseClient ? 'Supabase Auth is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to the project .env file.' : '');
+  const setupMessage = !configLoading && (configError || !supabaseClient)
+    ? 'Secure access is temporarily unavailable. Please contact the system administrator.'
+    : '';
 
   return (
     <main className="lock-screen">
@@ -207,8 +207,8 @@ export function LoginWizard({ supabaseClient, configLoading, configError, config
         <div className="lock-eye">
           <Eye aria-hidden="true" />
         </div>
-        <h1>Sovereign Eye v4</h1>
-        <p>قانوني عملیاتي مرکز</p>
+        <h1>Sovereign Eye</h1>
+        <p>قانوني عملياتي مرکز</p>
         <div className="step-dots" aria-label={`Step ${step} of 2`}>
           {[1, 2].map((value) => (
             <span key={value} className={value < step ? 'done' : value === step ? 'active' : ''} />
@@ -216,16 +216,6 @@ export function LoginWizard({ supabaseClient, configLoading, configError, config
         </div>
 
         {setupMessage && <p className="form-error">{setupMessage}</p>}
-        <div className="notice" aria-label="Supabase Auth debug information">
-          <strong>Supabase Auth debug</strong>
-          <div>VITE_SUPABASE_URL loaded: {configDebug?.VITE_SUPABASE_URL_loaded ? 'true' : 'false'}</div>
-          <div>VITE_SUPABASE_ANON_KEY loaded: {configDebug?.VITE_SUPABASE_ANON_KEY_loaded ? 'true' : 'false'}</div>
-          <div>authEnabled: {configDebug?.authEnabled ? 'true' : 'false'}</div>
-          <div>client initialized: {configDebug?.supabaseClientInitialized ? 'true' : 'false'}</div>
-          <div>Supabase URL path: {configDebug?.supabaseUrlPath || 'not loaded'}</div>
-          <div>Supabase URL had invalid path: {configDebug?.supabaseUrlHadPath ? 'true' : 'false'}</div>
-          {configDebug?.source && <div>source: {configDebug.source}</div>}
-        </div>
         {success && <p className="notice">{success}</p>}
 
         {step === 1 && mode !== 'updatePassword' && (
@@ -250,7 +240,7 @@ export function LoginWizard({ supabaseClient, configLoading, configError, config
               <input
                 value={credentials.email}
                 onChange={(event) => updateCredentials('email', event.target.value)}
-                placeholder="name@example.com"
+                placeholder="Official email"
                 type="email"
                 autoComplete="email"
                 disabled={submitting}
@@ -261,7 +251,7 @@ export function LoginWizard({ supabaseClient, configLoading, configError, config
               <input
                 value={credentials.password}
                 onChange={(event) => updateCredentials('password', event.target.value)}
-                placeholder="Your account password"
+                placeholder="Account password"
                 type="password"
                 autoComplete="current-password"
                 disabled={submitting}
@@ -281,7 +271,7 @@ export function LoginWizard({ supabaseClient, configLoading, configError, config
               <input
                 value={registration.displayName}
                 onChange={(event) => updateRegistration('displayName', event.target.value)}
-                placeholder="Your name"
+                placeholder="Full legal name"
                 autoComplete="name"
                 disabled={submitting}
               />
@@ -291,7 +281,7 @@ export function LoginWizard({ supabaseClient, configLoading, configError, config
               <input
                 value={registration.email}
                 onChange={(event) => updateRegistration('email', event.target.value)}
-                placeholder="name@example.com"
+                placeholder="Official email"
                 type="email"
                 autoComplete="email"
                 disabled={submitting}
@@ -302,7 +292,7 @@ export function LoginWizard({ supabaseClient, configLoading, configError, config
               <input
                 value={registration.password}
                 onChange={(event) => updateRegistration('password', event.target.value)}
-                placeholder="At least 8 characters"
+                placeholder="Create a secure password"
                 type="password"
                 autoComplete="new-password"
                 disabled={submitting}
@@ -322,7 +312,7 @@ export function LoginWizard({ supabaseClient, configLoading, configError, config
               <input
                 value={resetEmail}
                 onChange={(event) => setResetEmail(event.target.value)}
-                placeholder="name@example.com"
+                placeholder="Official email"
                 type="email"
                 autoComplete="email"
                 disabled={submitting}
@@ -342,7 +332,7 @@ export function LoginWizard({ supabaseClient, configLoading, configError, config
               <input
                 value={newPassword}
                 onChange={(event) => setNewPassword(event.target.value)}
-                placeholder="At least 8 characters"
+                placeholder="New secure password"
                 type="password"
                 autoComplete="new-password"
                 disabled={submitting}

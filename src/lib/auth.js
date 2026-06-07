@@ -101,7 +101,7 @@ export async function getCurrentSessionUser(client) {
 
 export async function signInWithSupabase(client, credentials) {
   if (!client) {
-    throw new Error('Supabase Auth is not configured.');
+    throw new Error('Secure access is temporarily unavailable.');
   }
 
   const email = credentials.email?.trim().toLowerCase();
@@ -130,7 +130,7 @@ export async function signInWithSupabase(client, credentials) {
 
 export async function signUpWithSupabase(client, payload) {
   if (!client) {
-    throw new Error('Supabase Auth is not configured.');
+    throw new Error('Secure access is temporarily unavailable.');
   }
 
   const email = payload.email?.trim().toLowerCase();
@@ -177,7 +177,7 @@ export async function signUpWithSupabase(client, payload) {
 
 export async function resetPasswordWithSupabase(client, email, redirectTo = getAuthRedirectUrl()) {
   if (!client) {
-    throw new Error('Supabase Auth is not configured.');
+    throw new Error('Secure access is temporarily unavailable.');
   }
 
   const cleanEmail = email?.trim().toLowerCase();
@@ -195,7 +195,7 @@ export async function resetPasswordWithSupabase(client, email, redirectTo = getA
 
 export async function updatePasswordWithSupabase(client, password) {
   if (!client) {
-    throw new Error('Supabase Auth is not configured.');
+    throw new Error('Secure access is temporarily unavailable.');
   }
 
   if (!password || password.length < 8) {

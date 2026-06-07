@@ -93,11 +93,7 @@ describe('runtime deployment config', () => {
     })).toMatchObject({
       supabaseUrl: 'https://project.supabase.co',
       supabaseAnonKey: 'public-key',
-      authEnabled: true,
-      debug: {
-        supabaseUrlPath: '/auth/v1',
-        supabaseUrlHadPath: true
-      }
+      authEnabled: true
     });
   });
 

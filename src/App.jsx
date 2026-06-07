@@ -74,15 +74,6 @@ function localEvidenceRow(action, detail) {
 export default function App() {
   const [configLoading, setConfigLoading] = useState(true);
   const [configError, setConfigError] = useState('');
-  const [configDebug, setConfigDebug] = useState({
-    VITE_SUPABASE_URL_loaded: false,
-    VITE_SUPABASE_ANON_KEY_loaded: false,
-    authEnabled: false,
-    supabaseClientInitialized: false,
-    supabaseUrlPath: '',
-    supabaseUrlHadPath: false,
-    source: 'not-loaded'
-  });
   const [supabaseClient, setSupabaseClient] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [warrant, setWarrant] = useState(null);
@@ -121,35 +112,12 @@ export default function App() {
       .then((config) => {
         if (!alive) return;
         const client = createSupabaseBrowserClient(config);
-        const debug = {
-          VITE_SUPABASE_URL_loaded: Boolean(config.supabaseUrl),
-          VITE_SUPABASE_ANON_KEY_loaded: Boolean(config.supabaseAnonKey),
-          authEnabled: Boolean(config.authEnabled),
-          supabaseClientInitialized: Boolean(client),
-          supabaseUrlPath: config.debug?.supabaseUrlPath || '',
-          supabaseUrlHadPath: Boolean(config.debug?.supabaseUrlHadPath),
-          source: 'public-config-loader'
-        };
-        console.info('[Sovereign Eye auth config] app init', debug);
-        setConfigDebug(debug);
         setSupabaseClient(client);
         setConfigError('');
       })
       .catch((err) => {
         if (!alive) return;
-        const debug = {
-          VITE_SUPABASE_URL_loaded: false,
-          VITE_SUPABASE_ANON_KEY_loaded: false,
-          authEnabled: false,
-          supabaseClientInitialized: false,
-          supabaseUrlPath: '',
-          supabaseUrlHadPath: false,
-          source: 'public-config-error',
-          error: err.message || 'Unknown configuration error'
-        };
-        console.warn('[Sovereign Eye auth config] app init failed', debug);
-        setConfigDebug(debug);
-        setConfigError(err.message || 'Unable to load secure configuration.');
+        setConfigError(err.message || 'Unable to load secure access.');
         setSupabaseClient(null);
       })
       .finally(() => {
@@ -465,7 +433,7 @@ export default function App() {
             }
           }}
           onFaceCheck={() => {
-            const text = 'Biometric provider is not configured. Connect an approved backend provider before using face matching.';
+            const text = 'Biometric review is available only through an approved secure provider.';
             setFaceResult(text);
             recordAudit('مخ پیژندنه', text);
           }}
@@ -558,7 +526,6 @@ export default function App() {
         <LoginWizard
           configLoading={configLoading}
           configError={configError}
-          configDebug={configDebug}
           supabaseClient={supabaseClient}
           onComplete={completeLogin}
         />

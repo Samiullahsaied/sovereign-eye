@@ -1,4 +1,4 @@
--- Sovereign Eye v4 production Supabase schema
+-- Sovereign Eye production Supabase schema
 -- Run this in the Supabase SQL Editor before deploying the app.
 
 create extension if not exists pgcrypto;

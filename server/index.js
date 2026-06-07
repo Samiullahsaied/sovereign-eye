@@ -145,6 +145,4 @@ createServer(async (req, res) => {
   }
 
   await serveStatic(req, res);
-}).listen(port, '127.0.0.1', () => {
-  console.log(`Sovereign Eye server listening on http://127.0.0.1:${port}`);
-});
+}).listen(port, '127.0.0.1');
