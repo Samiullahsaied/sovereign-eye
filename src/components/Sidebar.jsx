@@ -1,5 +1,6 @@
 import {
   Bot,
+  BrainCircuit,
   ChartLine,
   ClipboardList,
   FolderOpen,
@@ -21,6 +22,7 @@ import {
 
 const ICONS = {
   Bot,
+  BrainCircuit,
   ChartLine,
   ClipboardList,
   FolderOpen,

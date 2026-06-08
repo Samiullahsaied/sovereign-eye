@@ -13,6 +13,7 @@ export const NAV_ITEMS = [
   { id: 'audit', label: 'آډیټ', icon: 'ClipboardList' },
   { id: 'users', label: 'کاروونکي', icon: 'Users' },
   { id: 'health', label: 'حالت', icon: 'HeartPulse' },
+  { id: 'behavioral-identity', label: '? ?????? ???? ????', icon: 'BrainCircuit' },
   { id: 'assistant', label: 'AI Assistant', icon: 'Bot' },
   { id: 'settings', label: 'تنظیمات', icon: 'Settings' }
 ];

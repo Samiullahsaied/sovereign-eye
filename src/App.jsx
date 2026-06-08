@@ -42,10 +42,11 @@ const Social = lazy(() => import('./pages/Social.jsx').then((module) => ({ defau
 const UsersPage = lazy(() => import('./pages/Users.jsx').then((module) => ({ default: module.UsersPage })));
 const Warrants = lazy(() => import('./pages/Warrants.jsx').then((module) => ({ default: module.Warrants })));
 const Assistant = lazy(() => import('./pages/Assistant.jsx').then((module) => ({ default: module.Assistant })));
+const BehavioralIdentityGraph = lazy(() => import('./pages/BehavioralIdentityGraph.jsx').then((module) => ({ default: module.BehavioralIdentityGraph })));
 
 const SESSION_LENGTH = 1800;
 const IDLE_LENGTH = 900;
-const SENSITIVE_PAGES = new Set(['cases', 'map', 'analytics', 'network', 'warrants', 'phone', 'social', 'keyboard', 'evidence', 'audit', 'assistant']);
+const SENSITIVE_PAGES = new Set(['cases', 'map', 'analytics', 'network', 'warrants', 'phone', 'social', 'keyboard', 'evidence', 'audit', 'behavioral-identity', 'assistant']);
 
 function makeId(prefix) {
   return `${prefix}-${globalThis.crypto?.randomUUID?.() || Date.now().toString(36)}`;
@@ -546,6 +547,10 @@ export default function App() {
       }} />,
       users: <UsersPage users={users} />,
       health: <Health statusRows={healthRows} />,
+      'behavioral-identity': <BehavioralIdentityGraph
+        onAudit={(action, detail) => recordAudit(action, detail)}
+        onEvidenceNote={(title, detail) => recordEvidence(title, detail)}
+      />,
       assistant: <Assistant
         alerts={alerts}
         auditLog={auditLog}
