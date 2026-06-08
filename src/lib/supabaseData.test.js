@@ -41,7 +41,10 @@ describe('Supabase operational data mapper', () => {
         created_at: '2026-06-04T00:00:00Z'
       }]),
       alerts: queryResult([]),
-      dashboard_stats: queryResult([])
+      dashboard_stats: queryResult([]),
+      user_sessions: queryResult([]),
+      device_records: queryResult([]),
+      typing_profiles: queryResult([])
     };
 
     const client = {
@@ -60,5 +63,8 @@ describe('Supabase operational data mapper', () => {
       vpn: false,
       risk: 'normal'
     });
+    expect(data.sessions).toEqual([]);
+    expect(data.deviceRecords).toEqual([]);
+    expect(data.typingProfiles).toEqual([]);
   });
 });

@@ -5,6 +5,11 @@ function timeLabel(value) {
   return value ? new Date(value).toLocaleString() : new Date().toLocaleString();
 }
 
+function numberValue(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function mapOrder(row) {
   const metadata = row.metadata || {};
   return {
@@ -118,6 +123,48 @@ function mapUser(row) {
   };
 }
 
+function mapSession(row) {
+  const profile = row.user_profiles || row.profiles || row.users;
+  return {
+    id: row.id,
+    user: profile?.display_name || profile?.email || row.user_id || 'System',
+    status: row.status || 'active',
+    userAgent: row.user_agent || '',
+    ip: row.ip || row.metadata?.ip || '',
+    startedAt: timeLabel(row.created_at || row.started_at),
+    startedAtISO: row.created_at || row.started_at,
+    lastSeenAt: timeLabel(row.last_seen_at),
+    endedAt: row.ended_at ? timeLabel(row.ended_at) : '',
+    metadata: row.metadata || {}
+  };
+}
+
+function mapDeviceRecord(row) {
+  const metadata = row.metadata || {};
+  return {
+    id: row.id,
+    name: row.device_name || row.name || metadata.device_name || metadata.name || 'Device record',
+    userId: row.user_id || row.owner_id || '',
+    deviceHint: row.device_hint || metadata.device_hint || '',
+    platform: row.platform || metadata.platform || '',
+    risk: row.risk || metadata.risk || 'normal',
+    lastSeenAt: timeLabel(row.last_seen_at || row.updated_at || row.created_at),
+    metadata
+  };
+}
+
+function mapTypingProfile(row) {
+  const metadata = row.metadata || {};
+  return {
+    id: row.id,
+    userId: row.user_id || row.profile_user_id || '',
+    profileLabel: row.profile_label || row.label || metadata.profile_label || 'Typing profile',
+    confidence: numberValue(row.confidence || metadata.confidence),
+    createdAt: timeLabel(row.created_at),
+    metadata
+  };
+}
+
 async function safeQuery(factory, fallback) {
   const { data, error } = await factory();
   if (error) return fallback;
@@ -125,7 +172,20 @@ async function safeQuery(factory, fallback) {
 }
 
 export async function loadOperationalData(client) {
-  const [orders, auditLogs, evidence, statusRows, settings, users, trafficRecords, alerts, dashboardStats] = await Promise.all([
+  const [
+    orders,
+    auditLogs,
+    evidence,
+    statusRows,
+    settings,
+    users,
+    trafficRecords,
+    alerts,
+    dashboardStats,
+    sessions,
+    deviceRecords,
+    typingProfiles
+  ] = await Promise.all([
     safeQuery(
       () => client.from('orders').select('*').order('created_at', { ascending: false }).limit(250),
       []
@@ -161,6 +221,18 @@ export async function loadOperationalData(client) {
     safeQuery(
       () => client.from('dashboard_stats').select('*').order('updated_at', { ascending: false }).limit(100),
       []
+    ),
+    safeQuery(
+      () => client.from('user_sessions').select('*,user_profiles:user_id(display_name,email)').order('created_at', { ascending: false }).limit(250),
+      []
+    ),
+    safeQuery(
+      () => client.from('device_records').select('*').order('last_seen_at', { ascending: false }).limit(250),
+      []
+    ),
+    safeQuery(
+      () => client.from('typing_profiles').select('*').order('created_at', { ascending: false }).limit(250),
+      []
     )
   ]);
 
@@ -177,7 +249,10 @@ export async function loadOperationalData(client) {
     users: users.map(mapUser),
     trafficRecords: trafficRecords.map(mapTrafficRecord),
     alerts: alerts.map(mapAlert),
-    dashboardStats
+    dashboardStats,
+    sessions: sessions.map(mapSession),
+    deviceRecords: deviceRecords.map(mapDeviceRecord),
+    typingProfiles: typingProfiles.map(mapTypingProfile)
   };
 }
 

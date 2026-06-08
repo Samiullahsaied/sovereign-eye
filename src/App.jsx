@@ -103,6 +103,9 @@ export default function App() {
   const [alerts, setAlerts] = useState([]);
   const [trafficData, setTrafficData] = useState([]);
   const [dashboardStats, setDashboardStats] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [deviceRecords, setDeviceRecords] = useState([]);
+  const [typingProfiles, setTypingProfiles] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [dataLoading, setDataLoading] = useState(false);
   const [expiryLoggedFor, setExpiryLoggedFor] = useState('');
@@ -172,6 +175,9 @@ export default function App() {
       setTrafficData(data.trafficRecords);
       setAlerts(data.alerts);
       setDashboardStats(data.dashboardStats);
+      setSessions(data.sessions || []);
+      setDeviceRecords(data.deviceRecords || []);
+      setTypingProfiles(data.typingProfiles || []);
     } finally {
       setDataLoading(false);
     }
@@ -297,6 +303,9 @@ export default function App() {
     setSettingsRows([]);
     setTrafficData([]);
     setDashboardStats([]);
+    setSessions([]);
+    setDeviceRecords([]);
+    setTypingProfiles([]);
     setCurrentSessionId(null);
     setExpiryLoggedFor('');
   }, [currentSessionId, supabaseClient]);
@@ -555,14 +564,24 @@ export default function App() {
       assistant: <Assistant
         alerts={alerts}
         auditLog={auditLog}
+        cases={cases}
+        dashboardStats={dashboardStats}
+        dataLoading={dataLoading}
+        deviceRecords={deviceRecords}
+        evidence={evidence}
+        sessions={sessions}
         statusRows={healthRows}
+        trafficData={trafficData}
+        typingProfiles={typingProfiles}
+        users={users}
         warrant={warrant}
-        onApprovalRequest={(result) => recordAudit('AI approval requested', `${result.action} - ${result.riskLevel}`)}
+        warrants={warrants}
+        onApprovalRequest={(result) => recordAudit('AI approval requested', `${result.action} - ${result.riskAssessment?.level || 'review'}`)}
       />,
       settings: <SettingsPage lang={lang} theme={theme} settingsRows={settingsRows} onLangChange={changeLang} onThemeChange={changeTheme} onReset={() => {
         clearAppStorage();
         setTypingFingerprint(null);
-        showToast('Local UI cache reset شو.', 'warn');
+        showToast('Local UI cache reset.', 'warn');
       }} />
     };
     return pages[activePage] ?? pages.dashboard;
@@ -572,7 +591,9 @@ export default function App() {
     auditLog,
     cases,
     currentUser,
+    dashboardStats,
     dataLoading,
+    deviceRecords,
     evidence,
     healthRows,
     lang,
@@ -583,12 +604,14 @@ export default function App() {
     refreshData,
     requireActiveWarrant,
     settingsRows,
+    sessions,
     showToast,
     supabaseClient,
     targets,
     theme,
     trafficData,
     typingFingerprint,
+    typingProfiles,
     users,
     warrant,
     warrants
