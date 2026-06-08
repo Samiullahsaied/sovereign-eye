@@ -1,16 +1,18 @@
 import { Card } from '../components/Card.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
+import { useT } from '../i18n/index.jsx';
 
 export function UsersPage({ users }) {
+  const t = useT();
   return (
-    <Card title="کاروونکي">
-      <div className="notice">Users and roles are loaded from Supabase Auth profiles and the public.roles table. Passwords are handled only by Supabase Auth.</div>
+    <Card title={t('users.title')}>
+      <div className="notice">{t('users.notice')}</div>
       {users.length === 0 ? (
-        <EmptyState title="کاروونکي نشته" body="Registered accounts will appear here after the Supabase schema is applied and user_profiles rows exist." />
+        <EmptyState title={t('users.emptyTitle')} body={t('users.emptyBody')} />
       ) : (
         <div className="table-wrap">
           <table>
-            <thead><tr><th>نوم</th><th>Email</th><th>رول</th><th>Status</th></tr></thead>
+            <thead><tr><th>{t('common.name')}</th><th>{t('common.email')}</th><th>{t('common.role')}</th><th>{t('common.status')}</th></tr></thead>
             <tbody>
               {users.map((user) => (
                 <tr key={user.id}>

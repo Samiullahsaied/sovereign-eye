@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { I18nProvider } from '../i18n/index.jsx';
 import { Assistant } from './Assistant.jsx';
 
 const activeWarrant = {
@@ -12,19 +13,21 @@ describe('AI Assistant page', () => {
     const onApprovalRequest = vi.fn();
 
     render(
-      <Assistant
-        warrant={activeWarrant}
-        cases={[{ id: 'case-1', title: 'Authorized case' }]}
-        auditLog={[{ id: 'audit-1', action: 'Login', detail: 'Operator login', time: '2026-06-08 08:00' }]}
-        evidence={[{ id: 'evidence-1', action: 'Evidence note', detail: 'Reviewed file', time: '2026-06-08 08:10' }]}
-        alerts={[{ id: 'alert-1', message: 'VPN alert', level: 'warn', createdAt: '2026-06-08 08:20' }]}
-        sessions={[{ id: 'session-1', status: 'active', userAgent: 'Browser', startedAt: '2026-06-08 08:00' }]}
-        deviceRecords={[{ id: 'device-1', name: 'Managed workstation' }]}
-        typingProfiles={[{ id: 'typing-1', profileLabel: 'Keyboard cadence' }]}
-        trafficData={[{ id: 'traffic-1', ip: '8.8.8.8', vpn: false }]}
-        statusRows={[]}
-        onApprovalRequest={onApprovalRequest}
-      />
+      <I18nProvider lang="en">
+        <Assistant
+          warrant={activeWarrant}
+          cases={[{ id: 'case-1', title: 'Authorized case' }]}
+          auditLog={[{ id: 'audit-1', action: 'Login', detail: 'Operator login', time: '2026-06-08 08:00' }]}
+          evidence={[{ id: 'evidence-1', action: 'Evidence note', detail: 'Reviewed file', time: '2026-06-08 08:10' }]}
+          alerts={[{ id: 'alert-1', message: 'VPN alert', level: 'warn', createdAt: '2026-06-08 08:20' }]}
+          sessions={[{ id: 'session-1', status: 'active', userAgent: 'Browser', startedAt: '2026-06-08 08:00' }]}
+          deviceRecords={[{ id: 'device-1', name: 'Managed workstation' }]}
+          typingProfiles={[{ id: 'typing-1', profileLabel: 'Keyboard cadence' }]}
+          trafficData={[{ id: 'traffic-1', ip: '8.8.8.8', vpn: false }]}
+          statusRows={[]}
+          onApprovalRequest={onApprovalRequest}
+        />
+      </I18nProvider>
     );
 
     expect(screen.getByText('Operational AI Assistant')).toBeInTheDocument();

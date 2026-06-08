@@ -1,28 +1,35 @@
 import { RotateCcw } from 'lucide-react';
 import { Card } from '../components/Card.jsx';
+import { SUPPORTED_LANGUAGES, useT } from '../i18n/index.jsx';
 
 export function SettingsPage({ lang, theme, settingsRows, onLangChange, onThemeChange, onReset }) {
+  const t = useT();
+
   return (
-    <Card title="تنظیمات">
+    <Card title={t('settings.title')}>
       <div className="settings-grid">
         <div>
-          <h3>ژبه</h3>
+          <h3>{t('settings.language')}</h3>
           <div className="segmented">
-            {['ps', 'dr', 'en'].map((value) => <button key={value} className={lang === value ? 'active' : ''} type="button" onClick={() => onLangChange(value)}>{value.toUpperCase()}</button>)}
+            {SUPPORTED_LANGUAGES.map((value) => (
+              <button key={value} className={lang === value ? 'active' : ''} type="button" onClick={() => onLangChange(value)}>
+                {t(`lang.${value}`)}
+              </button>
+            ))}
           </div>
         </div>
         <div>
-          <h3>Theme</h3>
+          <h3>{t('settings.theme')}</h3>
           <div className="segmented">
-            <button className={theme === 'dark' ? 'active' : ''} type="button" onClick={() => onThemeChange('dark')}>تیاره</button>
-            <button className={theme === 'light' ? 'active' : ''} type="button" onClick={() => onThemeChange('light')}>روښانه</button>
+            <button className={theme === 'dark' ? 'active' : ''} type="button" onClick={() => onThemeChange('dark')}>{t('common.dark')}</button>
+            <button className={theme === 'light' ? 'active' : ''} type="button" onClick={() => onThemeChange('light')}>{t('common.light')}</button>
           </div>
         </div>
       </div>
-      <div className="notice">IPinfo geolocation اوس د خوندي backend endpoint له لارې کار کوي. Token په browser یا settings UI کې نه ښکاري.</div>
-      <div className="notice">Supabase settings rows loaded: {settingsRows.length}</div>
+      <div className="notice">{t('settings.ipinfoNotice')}</div>
+      <div className="notice">{t('settings.supabaseRows', { count: settingsRows.length })}</div>
       <div className="button-row">
-        <button className="btn danger" type="button" onClick={onReset}><RotateCcw /> Local UI cache reset</button>
+        <button className="btn danger" type="button" onClick={onReset}><RotateCcw /> {t('settings.resetCache')}</button>
       </div>
     </Card>
   );

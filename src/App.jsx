@@ -1,10 +1,11 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { LoginWizard } from './components/LoginWizard.jsx';
 import { Modal } from './components/Modal.jsx';
 import { PageErrorBoundary } from './components/PageErrorBoundary.jsx';
 import { Shell } from './components/Shell.jsx';
 import { ToastStack } from './components/Toast.jsx';
 import { NAV_ITEMS } from './data/appConstants.js';
+import { I18nProvider, createTranslator, directionForLanguage, normalizeLanguage } from './i18n/index.jsx';
 import { signOutOfSupabase } from './lib/auth.js';
 import { lookupIpInfo } from './lib/ipinfo.js';
 import { canAccessPage, filterPagesForRole } from './lib/roles.js';
@@ -84,7 +85,7 @@ export default function App() {
   const [warrant, setWarrant] = useState(null);
   const [activePage, setActivePage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [lang, setLang] = useState(() => readString('se_lang', 'ps'));
+  const [lang, setLang] = useState(() => normalizeLanguage(readString('se_lang', 'ps')));
   const [theme, setTheme] = useState(() => readString('se_theme', 'dark'));
   const [query, setQuery] = useState('');
   const [ipLookup, setIpLookup] = useState({ loading: false, error: '', result: null });
@@ -113,6 +114,7 @@ export default function App() {
   const navItems = useMemo(() => (
     currentUser ? filterPagesForRole(NAV_ITEMS, currentUser.roleSlug) : []
   ), [currentUser]);
+  const t = useMemo(() => createTranslator(lang), [lang]);
 
   useEffect(() => {
     let alive = true;
@@ -142,9 +144,9 @@ export default function App() {
   useEffect(() => writeString('se_theme', theme), [theme]);
 
   useEffect(() => {
-    document.documentElement.lang = lang === 'en' ? 'en' : 'ps';
-    document.documentElement.dir = lang === 'en' ? 'ltr' : 'rtl';
-    document.body.dir = lang === 'en' ? 'ltr' : 'rtl';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = directionForLanguage(lang);
+    document.body.dir = directionForLanguage(lang);
     document.body.classList.toggle('light', theme === 'light');
   }, [lang, theme]);
 
@@ -197,18 +199,18 @@ export default function App() {
       const { error } = await insertAuditLog(supabaseClient, userOverride.id, action, detail);
       if (error) throw error;
     } catch {
-      showToast('Audit log write failed. Check Supabase table policies.', 'warn');
+      showToast(t('toast.auditFailed'), 'warn');
     }
-  }, [currentUser, showToast, supabaseClient]);
+  }, [currentUser, showToast, supabaseClient, t]);
 
   const requireActiveWarrant = useCallback(async (actionLabel) => {
     if (isWarrantActive(warrant)) return true;
     const status = getWarrantStatus(warrant);
     const detail = `${actionLabel} blocked. Access status: ${status}.`;
-    showToast('Access window is not active. Sensitive action blocked.', 'warn');
+    showToast(t('toast.accessBlocked'), 'warn');
     await recordAudit('user attempted access after expiry', detail);
     return false;
-  }, [recordAudit, showToast, warrant]);
+  }, [recordAudit, showToast, t, warrant]);
 
   const recordEvidence = useCallback(async (action, detail, userOverride = currentUser) => {
     const localRow = localEvidenceRow(action, detail);
@@ -219,15 +221,15 @@ export default function App() {
       const { error } = await insertEvidence(supabaseClient, userOverride.id, action, detail);
       if (error) throw error;
     } catch {
-      showToast('Evidence write failed. Check Supabase table policies.', 'warn');
+      showToast(t('toast.evidenceFailed'), 'warn');
     }
-  }, [currentUser, showToast, supabaseClient]);
+  }, [currentUser, showToast, supabaseClient, t]);
 
   const pushAlert = useCallback((message) => {
     const clean = sanitizeText(message);
     const localId = makeId('alert');
     setAlerts((items) => [{ id: localId, message: clean }, ...items].slice(0, 10));
-    recordAudit('خبرتیا', clean);
+    recordAudit('alert', clean);
     if (supabaseClient && currentUser) {
       insertAlert(supabaseClient, currentUser.id, clean)
         .then(({ data, error }) => {
@@ -243,17 +245,17 @@ export default function App() {
           }
         })
         .catch(() => {
-          showToast('Alert write failed. Check Supabase table policies.', 'warn');
+          showToast(t('toast.alertFailed'), 'warn');
         });
     }
-  }, [currentUser, recordAudit, showToast, supabaseClient]);
+  }, [currentUser, recordAudit, showToast, supabaseClient, t]);
 
   const runDashboardSearch = useCallback(async () => {
     if (!await requireActiveWarrant('IPinfo lookup')) return;
     const ip = sanitizeText(query);
     if (!ip) {
-      setIpLookup({ loading: false, error: 'Enter an IP address to search.', result: null });
-      showToast('Enter an IP address to search.', 'warn');
+      setIpLookup({ loading: false, error: t('toast.enterIp'), result: null });
+      showToast(t('toast.enterIp'), 'warn');
       return;
     }
 
@@ -261,7 +263,7 @@ export default function App() {
     try {
       const result = await lookupIpInfo(ip);
       setIpLookup({ loading: false, error: '', result });
-      showToast(`IPinfo lookup completed for ${result.ip || ip}.`);
+      showToast(t('toast.ipDone', { ip: result.ip || ip }));
       await recordAudit('IPinfo lookup', result.ip || ip);
       if (supabaseClient && currentUser && result.ip) {
         const { error } = await insertTrafficRecord(supabaseClient, currentUser.id, {
@@ -270,18 +272,18 @@ export default function App() {
           metadata: { lookupQuery: ip }
         });
         if (error) {
-          showToast(error.message || 'Traffic record write failed.', 'warn');
+          showToast(error.message || t('toast.trafficFailed'), 'warn');
         } else {
           await refreshData();
         }
       }
     } catch (error) {
-      const message = error.message || 'IPinfo lookup failed.';
+      const message = error.message || t('toast.trafficFailed');
       setIpLookup({ loading: false, error: message, result: null });
       showToast(message, 'warn');
       await recordAudit('IPinfo lookup failed', `${ip}: ${message}`);
     }
-  }, [currentUser, query, recordAudit, refreshData, requireActiveWarrant, showToast, supabaseClient]);
+  }, [currentUser, query, recordAudit, refreshData, requireActiveWarrant, showToast, supabaseClient, t]);
 
   const logout = useCallback(async () => {
     if (supabaseClient && currentSessionId) {
@@ -318,10 +320,10 @@ export default function App() {
 
   useEffect(() => {
     if (currentUser && sessionSeconds === 0) {
-      showToast('د غونډې وخت ختم شو.', 'warn');
+      showToast(t('toast.sessionExpired'), 'warn');
       logout();
     }
-  }, [currentUser, logout, sessionSeconds, showToast]);
+  }, [currentUser, logout, sessionSeconds, showToast, t]);
 
   useEffect(() => {
     if (!currentUser) return undefined;
@@ -329,7 +331,7 @@ export default function App() {
     const resetIdle = () => {
       window.clearTimeout(idleTimer);
       idleTimer = window.setTimeout(() => {
-        showToast('د بې کارۍ له امله سیستم وتړل شو.', 'warn');
+        showToast(t('toast.idleLogout'), 'warn');
         logout();
       }, IDLE_LENGTH * 1000);
     };
@@ -339,14 +341,14 @@ export default function App() {
       window.clearTimeout(idleTimer);
       ['mousemove', 'keydown', 'click', 'touchstart'].forEach((eventName) => document.removeEventListener(eventName, resetIdle));
     };
-  }, [currentUser, logout, showToast]);
+  }, [currentUser, logout, showToast, t]);
 
   const completeLogin = async ({ user, warrant: legalWarrant }) => {
     setCurrentUser(user);
     setWarrant(legalWarrant);
     setSessionSeconds(SESSION_LENGTH);
     setExpiryLoggedFor('');
-    showToast('ننوتل بریالي شول.');
+    showToast(t('toast.loginSuccess'));
 
     if (supabaseClient) {
       try {
@@ -359,7 +361,7 @@ export default function App() {
         });
         if (!error) setCurrentSessionId(data.id);
       } catch {
-        showToast('User session write failed. Check Supabase table policies.', 'warn');
+        showToast(t('toast.sessionWriteFailed'), 'warn');
       }
     }
 
@@ -379,20 +381,20 @@ export default function App() {
         });
         if (error) throw error;
       } catch {
-        showToast('Legal order already exists or could not be stored.', 'warn');
+        showToast(t('toast.orderExists'), 'warn');
       }
     }
 
     await recordAudit('warrant uploaded', legalWarrant.courtOrderFileName, user);
     await recordAudit('warrant approved', `${legalWarrant.number} · ${legalWarrant.approvedBy}`, user);
     await recordAudit('access started', legalWarrant.number, user);
-    await recordAudit('ننوتل', legalWarrant.number, user);
-    await recordEvidence('قانوني ننوتل', `${user.name} · ${legalWarrant.number}`, user);
+    await recordAudit('login', legalWarrant.number, user);
+    await recordEvidence('legal login', `${user.name} · ${legalWarrant.number}`, user);
   };
 
   const navigate = async (pageId) => {
     if (currentUser && !canAccessPage(currentUser.roleSlug, pageId)) {
-      showToast('ستاسو رول دې برخې ته اجازه نه لري.', 'warn');
+      showToast(t('toast.noRoleAccess'), 'warn');
       return;
     }
     if (currentUser && SENSITIVE_PAGES.has(pageId) && !await requireActiveWarrant(`open ${pageId}`)) {
@@ -405,13 +407,13 @@ export default function App() {
   const addOrderBackedItem = async (type, payload, successMessage) => {
     if (!await requireActiveWarrant(`create ${type}`)) return false;
     if (!supabaseClient || !currentUser) {
-      showToast('Supabase connection is required for this action.', 'warn');
+      showToast(t('toast.supabaseRequired'), 'warn');
       return false;
     }
 
     const { error } = await insertOrder(supabaseClient, currentUser.id, type, payload);
     if (error) {
-      showToast(error.message || 'Supabase write failed.', 'warn');
+      showToast(error.message || t('toast.supabaseWriteFailed'), 'warn');
       return false;
     }
 
@@ -423,12 +425,12 @@ export default function App() {
   const removeOrderBackedItem = async (id, auditAction) => {
     if (!await requireActiveWarrant(auditAction)) return false;
     if (!supabaseClient) {
-      showToast('Supabase connection is required for this action.', 'warn');
+      showToast(t('toast.supabaseRequired'), 'warn');
       return false;
     }
     const { error } = await deleteOrder(supabaseClient, id);
     if (error) {
-      showToast(error.message || 'Supabase delete failed.', 'warn');
+      showToast(error.message || t('toast.supabaseDeleteFailed'), 'warn');
       return false;
     }
     await recordAudit(auditAction, id);
@@ -437,9 +439,10 @@ export default function App() {
   };
 
   const changeLang = async (value) => {
-    setLang(value);
+    const nextLang = normalizeLanguage(value);
+    setLang(nextLang);
     if (supabaseClient && currentUser) {
-      await upsertSetting(supabaseClient, 'ui.language', { value }, currentUser.id);
+      await upsertSetting(supabaseClient, 'ui.language', { value: nextLang }, currentUser.id);
     }
   };
 
@@ -453,7 +456,7 @@ export default function App() {
   const revokeAccess = useCallback(async () => {
     if (!warrant) return;
     setWarrant({ ...warrant, status: WARRANT_STATUS.REVOKED });
-    showToast('Legal access has been revoked.', 'warn');
+    showToast(t('toast.accessRevoked'), 'warn');
     await recordAudit('access revoked', warrant.number);
   }, [recordAudit, showToast, warrant]);
 
@@ -465,17 +468,17 @@ export default function App() {
 
     setWarrant((current) => (current ? { ...current, status: WARRANT_STATUS.EXPIRED } : current));
     setExpiryLoggedFor(warrant.number);
-    showToast('Legal access window expired. Sensitive actions are blocked.', 'warn');
+    showToast(t('toast.accessExpired'), 'warn');
     recordAudit('access expired', warrant.number);
   }, [currentUser, expiryLoggedFor, recordAudit, showToast, warrant]);
 
   const healthRows = useMemo(() => (
     statusRows.length > 0 ? statusRows : [
-      { id: 'auth', name: 'Supabase Auth', status: supabaseClient ? 'Configured' : 'Missing backend environment', tone: supabaseClient ? 'ok' : 'warn' },
-      { id: 'ipinfo', name: 'IPinfo backend', status: 'Backend endpoint only', tone: 'ok' },
-      { id: 'tables', name: 'Supabase tables', status: dataLoading ? 'Loading' : 'Awaiting live rows', tone: dataLoading ? 'gold' : 'warn' }
+      { id: 'auth', name: t('health.rows.auth'), status: supabaseClient ? t('health.rows.configured') : t('health.rows.missingBackend'), tone: supabaseClient ? 'ok' : 'warn' },
+      { id: 'ipinfo', name: t('health.rows.ipinfo'), status: t('health.rows.backendOnly'), tone: 'ok' },
+      { id: 'tables', name: t('health.rows.tables'), status: dataLoading ? t('common.loading') : t('health.rows.awaitingRows'), tone: dataLoading ? 'gold' : 'warn' }
     ]
-  ), [dataLoading, statusRows, supabaseClient]);
+  ), [dataLoading, statusRows, supabaseClient, t]);
 
   const page = useMemo(() => {
     const commonQuery = query.trim();
@@ -492,21 +495,21 @@ export default function App() {
             setAlerts((items) => items.filter((item) => item.id !== id));
             if (supabaseClient && currentUser && /^[0-9a-f-]{36}$/i.test(id)) {
               const { error } = await acknowledgeAlert(supabaseClient, id, currentUser.id);
-              if (error) showToast(error.message || 'Alert acknowledgement failed.', 'warn');
+              if (error) showToast(error.message || t('toast.alertAckFailed'), 'warn');
             }
           }}
           onFaceCheck={() => {
             const text = 'Biometric review is available only through an approved secure provider.';
             setFaceResult(text);
-            recordAudit('مخ پیژندنه', text);
+            recordAudit('face recognition', text);
           }}
         />
       ),
       cases: <Cases cases={cases} query={commonQuery} onAddCase={async (item) => {
-        const ok = await addOrderBackedItem('case', item, 'قضیه ثبت شوه.');
-        if (ok) await recordAudit('نوی قضیه', item.title);
+        const ok = await addOrderBackedItem('case', item, t('cases.saveSuccess'));
+        if (ok) await recordAudit('case created', item.title);
         return ok;
-      }} onRemoveCase={(id) => removeOrderBackedItem(id, 'قضیه لرې شوه')} />,
+      }} onRemoveCase={(id) => removeOrderBackedItem(id, 'case removed')} />,
       map: <MapPage points={trafficData} onProvinceSelect={(province) => recordAudit('Province selected', province)} />,
       analytics: <Analytics cases={cases} trafficData={trafficData} />,
       network: <NetworkPage trafficData={trafficData} query={commonQuery} />,
@@ -520,28 +523,28 @@ export default function App() {
           title: sanitizeText(file.name),
           country: 'Afghanistan'
         };
-        const ok = await addOrderBackedItem('warrant', item, 'د حکم metadata ثبت شوه.');
-        if (ok) await recordAudit('حکم ثبت', item.name);
+        const ok = await addOrderBackedItem('warrant', item, t('warrant.saveSuccess'));
+        if (ok) await recordAudit('warrant registered', item.name);
         return ok;
-      }} onRemoveWarrant={(id) => removeOrderBackedItem(id, 'حکم لرې شو')} />,
+      }} onRemoveWarrant={(id) => removeOrderBackedItem(id, 'warrant removed')} />,
       phone: <PhonePage warrant={warrant} onBeforeClassify={() => requireActiveWarrant('phone classification')} onClassify={(phone, result) => {
-        recordAudit('تلیفون طبقه بندي', `${phone} (${result.country})`);
-        recordEvidence('تلیفون workflow', `${result.normalized} -> ${result.country}`);
+        recordAudit('phone classified', `${phone} (${result.country})`);
+        recordEvidence('phone workflow', `${result.normalized} -> ${result.country}`);
       }} />,
       social: <Social targets={targets} query={commonQuery} onAddTarget={async (item) => {
         const ok = await addOrderBackedItem('social_target', {
           ...item,
           title: `${item.platform}: ${item.target}`,
           orderNumber: `SOC-${Date.now()}`
-        }, 'هدف ثبت شو.');
-        if (ok) await recordAudit('هدف اضافه', `${item.platform}: ${item.target}`);
+        }, t('social.saveSuccess'));
+        if (ok) await recordAudit('target added', `${item.platform}: ${item.target}`);
         return ok;
-      }} onRemoveTarget={(id) => removeOrderBackedItem(id, 'هدف لرې شو')} />,
+      }} onRemoveTarget={(id) => removeOrderBackedItem(id, 'target removed')} />,
       keyboard: <Keystroke storedFingerprint={typingFingerprint} onSaveFingerprint={async (fingerprint) => {
         if (!await requireActiveWarrant('typing fingerprint capture')) return false;
         setTypingFingerprint(fingerprint);
         recordAudit('typing fingerprint captured', 'Typing fingerprint captured for this session');
-        showToast('Typing sample saved for this session.');
+        showToast(t('toast.sampleSaved'));
         return true;
       }} onHighSimilarity={async (score) => {
         if (!await requireActiveWarrant('typing similarity alert')) return;
@@ -553,7 +556,7 @@ export default function App() {
         if (!await requireActiveWarrant('clear audit view')) return;
         setAuditLog([]);
         recordAudit('Audit view cleared', 'Visible audit rows were cleared locally; Supabase records remain retained.');
-        showToast('Visible audit rows cleared locally.', 'warn');
+        showToast(t('toast.auditCleared'), 'warn');
       }} />,
       users: <UsersPage users={users} />,
       health: <Health statusRows={healthRows} />,
@@ -581,7 +584,7 @@ export default function App() {
       settings: <SettingsPage lang={lang} theme={theme} settingsRows={settingsRows} onLangChange={changeLang} onThemeChange={changeTheme} onReset={() => {
         clearAppStorage();
         setTypingFingerprint(null);
-        showToast('Local UI cache reset.', 'warn');
+        showToast(t('toast.cacheReset'), 'warn');
       }} />
     };
     return pages[activePage] ?? pages.dashboard;
@@ -609,6 +612,7 @@ export default function App() {
     supabaseClient,
     targets,
     theme,
+    t,
     trafficData,
     typingFingerprint,
     typingProfiles,
@@ -619,20 +623,22 @@ export default function App() {
 
   if (!currentUser) {
     return (
-      <>
+      <I18nProvider lang={lang}>
         <LoginWizard
+          lang={lang}
           configLoading={configLoading}
           configError={configError}
           supabaseClient={supabaseClient}
+          onLangChange={changeLang}
           onComplete={completeLogin}
         />
         <ToastStack toasts={toasts} />
-      </>
+      </I18nProvider>
     );
   }
 
   return (
-    <>
+    <I18nProvider lang={lang}>
       <Shell
         activePage={activePage}
         lang={lang}
@@ -653,17 +659,18 @@ export default function App() {
         onToggleSidebar={() => setSidebarOpen((open) => !open)}
         onRevokeWarrant={revokeAccess}
       >
-        <PageErrorBoundary pageId={activePage} resetKey={activePage}>
-          <Suspense fallback={<section className="card loading-card">{activePage === 'assistant' ? 'Loading AI Assistant...' : 'Loading section...'}</section>}>
+        <PageErrorBoundary pageId={activePage} resetKey={activePage} t={t}>
+          <Suspense fallback={<section className="card loading-card">{t('common.loading')}</section>}>
             {page}
           </Suspense>
         </PageErrorBoundary>
       </Shell>
-      <Modal open={Boolean(faceResult)} title="د مخ پیژندنې پایله" onClose={() => setFaceResult('')}>
+      <Modal open={Boolean(faceResult)} title={t('face.title')} onClose={() => setFaceResult('')}>
         <p>{faceResult}</p>
-        <div className="notice">Face matching requires an approved backend provider, documented legal basis, and human review.</div>
+        <div className="notice">{t('face.requiresBackend')}</div>
       </Modal>
       <ToastStack toasts={toasts} />
-    </>
+    </I18nProvider>
   );
 }
+

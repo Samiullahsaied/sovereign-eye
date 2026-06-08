@@ -2,9 +2,11 @@ import { Download } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { Card } from '../components/Card.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
+import { useT } from '../i18n/index.jsx';
 import { downloadCSV } from '../lib/csv.js';
 
 export function NetworkPage({ trafficData, query }) {
+  const t = useT();
   const canvasRef = useRef(null);
   const filtered = trafficData.filter((row) => `${row.ip} ${row.country} ${row.city}`.toLowerCase().includes(query.toLowerCase()));
 
@@ -29,7 +31,7 @@ export function NetworkPage({ trafficData, query }) {
       ctx.fillStyle = '#80A0C0';
       ctx.font = '14px Vazirmatn';
       ctx.textAlign = 'center';
-      ctx.fillText('No network rows loaded', rect.width / 2, rect.height / 2);
+      ctx.fillText(t('network.noRowsCanvas'), rect.width / 2, rect.height / 2);
       return;
     }
     ctx.strokeStyle = '#C8A427';
@@ -54,34 +56,32 @@ export function NetworkPage({ trafficData, query }) {
     ctx.arc(center.x, center.y, 18, 0, Math.PI * 2);
     ctx.fillStyle = '#C8A427';
     ctx.fill();
-  }, [filtered]);
+  }, [filtered, t]);
 
-  const exportRows = () => downloadCSV('traffic_export.csv', [['وخت', 'IP', 'هیواد', 'VPN', 'ښار'], ...filtered.map((row) => [row.time, row.ip, row.country, row.vpn ? 'VPN' : 'عادي', row.city])]);
+  const exportRows = () => downloadCSV('traffic_export.csv', [[t('common.time'), 'IP', t('common.country'), 'VPN', t('common.city')], ...filtered.map((row) => [row.time, row.ip, row.country, row.vpn ? 'VPN' : t('common.normal'), row.city])]);
 
   return (
     <div className="page-stack">
-      <Card title="د اړیکو شبکه">
-        <canvas ref={canvasRef} className="network-canvas" aria-label="Network graph" />
+      <Card title={t('network.graph')}>
+        <canvas ref={canvasRef} className="network-canvas" aria-label={t('network.graph')} />
       </Card>
-      <Card title="د ترافیک جدول" actions={<button className="btn small" type="button" onClick={exportRows}><Download /> CSV صادرول</button>}>
+      <Card title={t('network.trafficTable')} actions={<button className="btn small" type="button" onClick={exportRows}><Download /> {t('network.exportCsv')}</button>}>
         <div className="table-wrap">
           <table>
-            <thead>
-              <tr><th>وخت</th><th>IP</th><th>هیواد</th><th>VPN</th><th>ښار</th></tr>
-            </thead>
+            <thead><tr><th>{t('common.time')}</th><th>IP</th><th>{t('common.country')}</th><th>VPN</th><th>{t('common.city')}</th></tr></thead>
             <tbody>
               {filtered.map((row) => (
                 <tr key={row.id}>
                   <td>{row.time}</td>
                   <td className="mono">{row.ip}</td>
                   <td>{row.country}</td>
-                  <td><span className={`badge ${row.vpn ? 'warn' : 'ok'}`}>{row.vpn ? 'VPN' : 'عادي'}</span></td>
+                  <td><span className={`badge ${row.vpn ? 'warn' : 'ok'}`}>{row.vpn ? 'VPN' : t('common.normal')}</span></td>
                   <td>{row.city}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {filtered.length === 0 && <EmptyState title="ترافیک نشته" body="کله چې Supabase rows وصل شي، معلومات به دلته ښکاره شي." />}
+          {filtered.length === 0 && <EmptyState title={t('network.noTraffic')} body={t('network.noTrafficBody')} />}
         </div>
       </Card>
     </div>

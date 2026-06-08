@@ -1,6 +1,8 @@
 import { X } from 'lucide-react';
+import { useT } from '../i18n/index.jsx';
 
 export function Modal({ open, title, children, onClose }) {
+  const t = useT();
   if (!open) return null;
 
   return (
@@ -8,7 +10,7 @@ export function Modal({ open, title, children, onClose }) {
       <div className="modal-box">
         <div className="modal-head">
           <h2 id="modal-title">{title}</h2>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Close modal">
+          <button className="icon-button" type="button" onClick={onClose} aria-label={t('common.closeModal')}>
             <X aria-hidden="true" />
           </button>
         </div>

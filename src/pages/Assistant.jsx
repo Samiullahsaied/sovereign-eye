@@ -1,6 +1,7 @@
 import { Activity, AlertTriangle, Bot, FileText, Send, ShieldCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Card } from '../components/Card.jsx';
+import { useT } from '../i18n/index.jsx';
 import { AI_ASSISTANT_ACTIONS, runOperationalAssistant } from '../lib/assistant.js';
 
 function countRecords(groups) {
@@ -31,6 +32,7 @@ export function Assistant({
   dataLoading = false,
   onApprovalRequest
 }) {
+  const t = useT();
   const [actionId, setActionId] = useState('case_analysis');
   const [notes, setNotes] = useState('');
   const [result, setResult] = useState(null);
@@ -77,7 +79,8 @@ export function Assistant({
     trafficData,
     statusRows,
     dashboardStats,
-    users
+    users,
+    t
   };
 
   const analyze = (event) => {
@@ -94,7 +97,7 @@ export function Assistant({
         {
           id: `operator-${Date.now()}`,
           role: 'operator',
-          text: notes.trim() || action.label
+          text: notes.trim() || t(`assistant.actions.${action.id}`)
         },
         {
           id: `assistant-${Date.now()}`,
@@ -104,7 +107,7 @@ export function Assistant({
       ].slice(-8));
     } catch {
       setResult(null);
-      setError('AI Assistant is temporarily unavailable');
+      setError(t('assistant.unavailable'));
     }
   };
 
@@ -116,20 +119,17 @@ export function Assistant({
 
   return (
     <div className="page-stack assistant-page">
-      <Card title="Operational AI Assistant" icon={<Bot aria-hidden="true" />}>
-        {dataLoading && <div className="notice">Loading operational records...</div>}
-        {isOffline && <div className="notice">Offline state detected. Analysis can use loaded records only.</div>}
+      <Card title={t('assistant.title')} icon={<Bot aria-hidden="true" />}>
+        {dataLoading && <div className="notice">{t('assistant.loadingRecords')}</div>}
+        {isOffline && <div className="notice">{t('assistant.offline')}</div>}
         <div className="assistant-hero">
           <div>
-            <h3>Permission-based operational analysis</h3>
-            <p>
-              The assistant analyzes internal records, summarizes evidence, explains alerts, reviews audit history,
-              detects anomalies, and drafts reports. It cannot execute operational actions automatically.
-            </p>
+            <h3>{t('assistant.heroTitle')}</h3>
+            <p>{t('assistant.heroBody')}</p>
           </div>
           <div className="assistant-stat">
             <span>{recordCount}</span>
-            <small>Loaded records</small>
+            <small>{t('assistant.loadedRecords')}</small>
           </div>
         </div>
 
@@ -137,39 +137,39 @@ export function Assistant({
           <form className="assistant-chat" onSubmit={analyze}>
             <div className="chat-window" aria-live="polite">
               {messages.length === 0 ? (
-                <div className="empty-chat">Select an analysis type and run the assistant against the loaded operational records.</div>
+                <div className="empty-chat">{t('assistant.emptyChat')}</div>
               ) : messages.map((message) => (
                 <div key={message.id} className={`chat-bubble ${message.role}`}>
-                  <strong>{message.role === 'operator' ? 'Operator' : 'AI Assistant'}</strong>
+                  <strong>{message.role === 'operator' ? t('common.operator') : t('nav.assistant')}</strong>
                   <span>{message.text}</span>
                 </div>
               ))}
             </div>
             <label>
-              <span>Analysis module</span>
+              <span>{t('assistant.analysisModule')}</span>
               <select value={actionId} onChange={(event) => setActionId(event.target.value)}>
                 {AI_ASSISTANT_ACTIONS.map((item) => (
-                  <option key={item.id} value={item.id}>{item.label} - {item.pashtoLabel}</option>
+                  <option key={item.id} value={item.id}>{t(`assistant.actions.${item.id}`)}</option>
                 ))}
               </select>
             </label>
             <label>
-              <span>Operator context</span>
+              <span>{t('assistant.operatorContext')}</span>
               <textarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
                 rows={4}
-                placeholder="Add authorized case context, alert details, audit questions, or report scope."
+                placeholder={t('assistant.contextPlaceholder')}
               />
             </label>
             <button className="btn primary" type="submit" disabled={dataLoading}>
-              <Send aria-hidden="true" /> Run analysis
+              <Send aria-hidden="true" /> {t('assistant.runAnalysis')}
             </button>
             {error && <p className="form-error">{error}</p>}
           </form>
 
           <div className="executive-panel">
-            <h3>Executive summary</h3>
+            <h3>{t('assistant.executiveSummary')}</h3>
             {result ? (
               <>
                 <p>{result.executiveSummary.headline}</p>
@@ -179,7 +179,7 @@ export function Assistant({
                 <div className="notice">{result.executiveSummary.operationalPosture}</div>
               </>
             ) : (
-              <p className="result-message">Run an analysis to generate an executive summary from current records.</p>
+              <p className="result-message">{t('assistant.executiveEmpty')}</p>
             )}
           </div>
         </div>
@@ -198,67 +198,67 @@ export function Assistant({
           </div>
 
           <div className="grid two">
-            <Card title="Analysis Result" icon={<Activity aria-hidden="true" />}>
+            <Card title={t('assistant.analysisResult')} icon={<Activity aria-hidden="true" />}>
               <div className="result-panel">
-                <div><strong>Confidence level:</strong> {result.confidenceLevel}</div>
-                <div><strong>Risk assessment:</strong> {result.riskAssessment.level}</div>
-                <div><strong>Summary:</strong> {result.summary}</div>
-                <div><strong>Automatic action:</strong> Not allowed</div>
+                <div><strong>{t('assistant.confidenceLevel')}:</strong> {result.confidenceLevel}</div>
+                <div><strong>{t('assistant.riskAssessment')}:</strong> {result.riskAssessment.level}</div>
+                <div><strong>{t('assistant.summary')}:</strong> {result.summary}</div>
+                <div><strong>{t('assistant.automaticAction')}:</strong> {t('assistant.notAllowed')}</div>
               </div>
               <div className="result-panel">
-                <strong>Evidence sources used</strong>
+                <strong>{t('assistant.evidenceSourcesUsed')}</strong>
                 {result.evidenceSourcesUsed.length ? result.evidenceSourcesUsed.map((item) => (
                   <div key={item.label}>{item.label}: {item.count}</div>
-                )) : <div>No internal source records were available.</div>}
+                )) : <div>{t('assistant.noSources')}</div>}
               </div>
               <div className="result-panel">
-                <strong>Recommended next steps</strong>
+                <strong>{t('assistant.recommendedNextSteps')}</strong>
                 <ul>
                   {result.recommendedNextSteps.map((item) => <li key={item}>{item}</li>)}
                 </ul>
               </div>
             </Card>
 
-            <Card title="Sensitive Action Control" icon={<ShieldCheck aria-hidden="true" />}>
+            <Card title={t('assistant.sensitiveControl')} icon={<ShieldCheck aria-hidden="true" />}>
               <div className="result-panel">
-                <div><strong>Explanation:</strong> {result.sensitiveAction.explanation}</div>
-                <div><strong>Impact:</strong> {result.sensitiveAction.impact}</div>
-                <div><strong>Required permissions:</strong> {result.sensitiveAction.requiredPermissions}</div>
-                <div><strong>Required human approval:</strong> {result.sensitiveAction.requiredHumanApproval}</div>
-                <div><strong>Can execute automatically:</strong> No</div>
+                <div><strong>{t('assistant.explanation')}:</strong> {result.sensitiveAction.explanation}</div>
+                <div><strong>{t('assistant.impact')}:</strong> {result.sensitiveAction.impact}</div>
+                <div><strong>{t('assistant.requiredPermissions')}:</strong> {result.sensitiveAction.requiredPermissions}</div>
+                <div><strong>{t('assistant.requiredHumanApproval')}:</strong> {result.sensitiveAction.requiredHumanApproval}</div>
+                <div><strong>{t('assistant.canExecuteAutomatically')}:</strong> {t('common.no')}</div>
               </div>
               <div className="result-panel">
-                <strong>Affected records</strong>
+                <strong>{t('assistant.affectedRecords')}</strong>
                 {result.sensitiveAction.affectedRecords.length ? result.sensitiveAction.affectedRecords.map((item) => (
                   <div key={item}>{item}</div>
-                )) : <div>No affected records are loaded.</div>}
+                )) : <div>{t('assistant.noAffectedRecords')}</div>}
               </div>
               <button className="btn primary" type="button" onClick={requestApproval}>
-                Request administrator approval
+                {t('assistant.requestApproval')}
               </button>
               {approvalRequested && (
-                <p className="notice">Approval request recorded for review. No operational action has been performed.</p>
+                <p className="notice">{t('assistant.approvalRecorded')}</p>
               )}
             </Card>
           </div>
 
-          <Card title="Evidence Timeline" icon={<FileText aria-hidden="true" />}>
+          <Card title={t('assistant.evidenceTimeline')} icon={<FileText aria-hidden="true" />}>
             {result.evidenceTimeline.length ? (
               <div className="timeline">
                 {result.evidenceTimeline.map((item) => (
                   <div className="timeline-item" key={`${item.type}-${item.sourceId}-${item.title}`}>
                     <strong>{item.type}: {item.title}</strong>
-                    <span>{item.detail || 'No additional detail.'}</span>
-                    <small>{item.time || 'Time not recorded'}</small>
+                    <span>{item.detail || t('assistant.noAdditionalDetail')}</span>
+                    <small>{item.time || t('assistant.timeNotRecorded')}</small>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="notice">No timeline records are currently available.</div>
+              <div className="notice">{t('assistant.noTimeline')}</div>
             )}
           </Card>
 
-          <Card title="Risk Reasons" icon={<AlertTriangle aria-hidden="true" />}>
+          <Card title={t('assistant.riskReasons')} icon={<AlertTriangle aria-hidden="true" />}>
             <ul className="rule-list">
               {result.riskAssessment.reasons.map((item) => <li key={item}>{item}</li>)}
             </ul>

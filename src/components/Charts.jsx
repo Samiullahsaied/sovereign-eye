@@ -6,10 +6,10 @@ function normalize(values, height) {
   }));
 }
 
-export function AreaChart({ series, labels }) {
+export function AreaChart({ series, labels, ariaLabel = 'chart' }) {
   const height = 80;
   return (
-    <div className="svg-chart" role="img" aria-label="Threat trend chart">
+    <div className="svg-chart" role="img" aria-label={ariaLabel}>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none">
         {series.map((line, index) => {
           const points = normalize(line.data, height);
@@ -29,12 +29,12 @@ export function AreaChart({ series, labels }) {
   );
 }
 
-export function DonutChart({ items }) {
+export function DonutChart({ items, ariaLabel = 'chart' }) {
   const total = items.reduce((sum, item) => sum + item.value, 0);
   let offset = 25;
 
   return (
-    <div className="donut-layout" role="img" aria-label="Traffic type chart">
+    <div className="donut-layout" role="img" aria-label={ariaLabel}>
       <svg viewBox="0 0 42 42" className="donut">
         <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="rgba(128,160,192,.18)" strokeWidth="5" />
         {items.map((item) => {
@@ -61,10 +61,10 @@ export function DonutChart({ items }) {
   );
 }
 
-export function BarChart({ values, labels }) {
+export function BarChart({ values, labels, ariaLabel = 'chart' }) {
   const max = Math.max(...values, 1);
   return (
-    <div className="bar-chart" role="img" aria-label="Monthly operations chart">
+    <div className="bar-chart" role="img" aria-label={ariaLabel}>
       {values.map((value, index) => (
         <div className="bar-column" key={labels[index]}>
           <span style={{ height: `${Math.max(8, (value / max) * 100)}%` }} />
@@ -75,9 +75,9 @@ export function BarChart({ values, labels }) {
   );
 }
 
-export function RadialBars({ items }) {
+export function RadialBars({ items, ariaLabel = 'chart' }) {
   return (
-    <div className="radial-grid" role="img" aria-label="Risk level chart">
+    <div className="radial-grid" role="img" aria-label={ariaLabel}>
       {items.map((item) => (
         <div className="radial-item" key={item.label} style={{ '--value': item.value, '--color': item.color }}>
           <div className="radial-circle"><strong>{item.value}%</strong></div>

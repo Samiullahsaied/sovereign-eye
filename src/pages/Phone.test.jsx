@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { I18nProvider } from '../i18n/index.jsx';
 import { PhonePage } from './Phone.jsx';
 
 vi.mock('../lib/numverify.js', () => ({
@@ -19,7 +20,11 @@ vi.mock('../lib/numverify.js', () => ({
 
 describe('PhonePage Numverify result card', () => {
   it('shows all Numverify fields in Pashto and keeps English details in technical details', async () => {
-    render(<PhonePage warrant={{ number: 'W-1' }} onClassify={vi.fn()} />);
+    render(
+      <I18nProvider lang="ps">
+        <PhonePage warrant={{ number: 'W-1' }} onClassify={vi.fn()} />
+      </I18nProvider>
+    );
 
     fireEvent.change(screen.getByPlaceholderText('+93 700 000 000'), { target: { value: '+14158586273' } });
     fireEvent.click(screen.getByRole('button', { name: /طبقه بندي/i }));

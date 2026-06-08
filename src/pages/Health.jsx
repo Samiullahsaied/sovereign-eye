@@ -1,8 +1,10 @@
 import { Card } from '../components/Card.jsx';
+import { useT } from '../i18n/index.jsx';
 
 export function Health({ statusRows }) {
+  const t = useT();
   return (
-    <Card title="سیستم حالت">
+    <Card title={t('health.title')}>
       <div className="grid two">
         {statusRows.map((service) => (
           <article className="health-card" key={service.id || service.name}>

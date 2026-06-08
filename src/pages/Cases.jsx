@@ -2,12 +2,14 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Card } from '../components/Card.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
+import { useT } from '../i18n/index.jsx';
 import { sanitizeText } from '../lib/validation.js';
 
-const DEFAULT_PRIORITY = 'لوړ';
+const PRIORITY_KEYS = ['critical', 'high', 'medium', 'low'];
 
 export function Cases({ cases, onAddCase, onRemoveCase, query }) {
-  const [form, setForm] = useState({ title: '', suspect: '', priority: DEFAULT_PRIORITY });
+  const t = useT();
+  const [form, setForm] = useState({ title: '', suspect: '', priority: 'high' });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const filtered = cases.filter((item) => `${item.title} ${item.suspect}`.toLowerCase().includes(query.toLowerCase()));
@@ -16,7 +18,7 @@ export function Cases({ cases, onAddCase, onRemoveCase, query }) {
     event.preventDefault();
     const title = sanitizeText(form.title);
     if (!title) {
-      setError('د قضیې نوم اړین دی.');
+      setError(t('cases.titleRequired'));
       return;
     }
 
@@ -25,55 +27,41 @@ export function Cases({ cases, onAddCase, onRemoveCase, query }) {
     try {
       const ok = await onAddCase({ title, suspect: sanitizeText(form.suspect), priority: form.priority });
       if (ok === false) {
-        setError('Case could not be saved. Check Supabase connection and table policies.');
+        setError(t('cases.saveFailed'));
         return;
       }
-      setForm({ title: '', suspect: '', priority: DEFAULT_PRIORITY });
+      setForm({ title: '', suspect: '', priority: 'high' });
     } catch (err) {
-      setError(err.message || 'Case could not be saved.');
+      setError(err.message || t('cases.saveError'));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Card title="د قضیو مدیریت">
+    <Card title={t('cases.title')}>
       <form className="inline-form" onSubmit={submit}>
+        <label><span>{t('cases.case')}</span><input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder={t('cases.caseName')} disabled={submitting} /></label>
+        <label><span>{t('cases.suspect')}</span><input value={form.suspect} onChange={(event) => setForm({ ...form, suspect: event.target.value })} placeholder={t('cases.suspectPlaceholder')} disabled={submitting} /></label>
         <label>
-          <span>قضیه</span>
-          <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="د قضیې نوم" disabled={submitting} />
-        </label>
-        <label>
-          <span>شکمن</span>
-          <input value={form.suspect} onChange={(event) => setForm({ ...form, suspect: event.target.value })} placeholder="نوم / شناسه" disabled={submitting} />
-        </label>
-        <label>
-          <span>اولویت</span>
+          <span>{t('cases.priority')}</span>
           <select value={form.priority} onChange={(event) => setForm({ ...form, priority: event.target.value })} disabled={submitting}>
-            <option>بحراني</option>
-            <option>لوړ</option>
-            <option>منځنی</option>
-            <option>ټیټ</option>
+            {PRIORITY_KEYS.map((key) => <option key={key} value={key}>{t(`common.${key}`)}</option>)}
           </select>
         </label>
-        <button className="btn primary" type="submit" disabled={submitting}><Plus /> {submitting ? 'Saving...' : 'اضافه'}</button>
+        <button className="btn primary" type="submit" disabled={submitting}><Plus /> {submitting ? t('common.saving') : t('common.add')}</button>
       </form>
       {error && <p className="form-error">{error}</p>}
       <div className="item-list">
         {filtered.length === 0 ? (
-          <EmptyState title="قضیه نشته" body="له پورته فورم څخه نوې قضیه ثبت کړئ." />
-        ) : (
-          filtered.map((item) => (
-            <article className="list-card" key={item.id}>
-              <div>
-                <strong>{item.title}</strong>
-                <span>{item.suspect || 'شکمن نه دی ټاکل شوی'}</span>
-              </div>
-              <span className={`badge ${item.priority === 'بحراني' ? 'danger' : 'gold'}`}>{item.priority}</span>
-              <button className="icon-button" type="button" onClick={() => onRemoveCase(item.id)} aria-label="Remove case" disabled={submitting}><Trash2 /></button>
-            </article>
-          ))
-        )}
+          <EmptyState title={t('cases.emptyTitle')} body={t('cases.emptyBody')} />
+        ) : filtered.map((item) => (
+          <article className="list-card" key={item.id}>
+            <div><strong>{item.title}</strong><span>{item.suspect || t('cases.noSuspect')}</span></div>
+            <span className={`badge ${item.priority === 'critical' ? 'danger' : 'gold'}`}>{t(`common.${item.priority}`) || item.priority}</span>
+            <button className="icon-button" type="button" onClick={() => onRemoveCase(item.id)} aria-label={t('cases.removeCase')} disabled={submitting}><Trash2 /></button>
+          </article>
+        ))}
       </div>
     </Card>
   );

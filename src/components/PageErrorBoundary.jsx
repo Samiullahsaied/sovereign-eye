@@ -19,13 +19,14 @@ export class PageErrorBoundary extends Component {
   render() {
     if (this.state.error) {
       const isAssistant = this.props.pageId === 'assistant';
+      const t = this.props.t || ((key) => key);
       return (
         <section className="card loading-card" role="alert">
-          <h2>{isAssistant ? 'AI Assistant is temporarily unavailable' : 'Section temporarily unavailable'}</h2>
+          <h2>{isAssistant ? t('assistant.unavailable') : t('common.sectionUnavailable')}</h2>
           <p className="notice">
             {isAssistant
-              ? 'The assistant could not load safely. No action was performed.'
-              : 'This section could not load safely. No action was performed.'}
+              ? t('common.assistantSafeFailure')
+              : t('common.sectionSafeFailure')}
           </p>
         </section>
       );

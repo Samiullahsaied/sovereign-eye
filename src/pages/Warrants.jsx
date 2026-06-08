@@ -2,8 +2,10 @@ import { FileUp, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Card } from '../components/Card.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
+import { useT } from '../i18n/index.jsx';
 
 export function Warrants({ warrants, onAddWarrantFile, onRemoveWarrant }) {
+  const t = useT();
   const inputRef = useRef(null);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -15,42 +17,35 @@ export function Warrants({ warrants, onAddWarrantFile, onRemoveWarrant }) {
     try {
       const ok = await onAddWarrantFile(file);
       if (ok === false) {
-        setError('Warrant metadata could not be saved. Check Supabase connection and table policies.');
+        setError(t('warrant.metadataFailed'));
         return;
       }
       if (inputRef.current) inputRef.current.value = '';
     } catch (err) {
-      setError(err.message || 'Warrant metadata could not be saved.');
+      setError(err.message || t('warrant.metadataSaveFailed'));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Card title="قانوني حکمونه">
-      <div className="notice">
-        حقیقي اسناد باید backend storage، access control، او audit retention سره وصل شي. دلته یوازې metadata خوندي کېږي.
-      </div>
+    <Card title={t('warrant.pageTitle')}>
+      <div className="notice">{t('warrant.metadataNotice')}</div>
       <label className="file-drop">
         <FileUp aria-hidden="true" />
-        <span>{submitting ? 'Saving metadata...' : 'PDF یا سند انتخاب کړئ'}</span>
+        <span>{submitting ? t('warrant.savingMetadata') : t('warrant.chooseDocument')}</span>
         <input ref={inputRef} type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={(event) => addFile(event.target.files?.[0])} disabled={submitting} />
       </label>
       {error && <p className="form-error">{error}</p>}
       <div className="item-list">
         {warrants.length === 0 ? (
-          <EmptyState title="حکم نه دی ثبت شوی" body="د پورته انتخاب له لارې د حکم metadata اضافه کړئ." />
-        ) : (
-          warrants.map((item) => (
-            <article className="list-card" key={item.id}>
-              <div>
-                <strong>{item.name}</strong>
-                <span>{item.country} · {item.sizeLabel}</span>
-              </div>
-              <button className="icon-button" type="button" onClick={() => onRemoveWarrant(item.id)} aria-label="Remove warrant" disabled={submitting}><Trash2 /></button>
-            </article>
-          ))
-        )}
+          <EmptyState title={t('warrant.emptyTitle')} body={t('warrant.emptyBody')} />
+        ) : warrants.map((item) => (
+          <article className="list-card" key={item.id}>
+            <div><strong>{item.name}</strong><span>{item.country} · {item.sizeLabel}</span></div>
+            <button className="icon-button" type="button" onClick={() => onRemoveWarrant(item.id)} aria-label={t('common.remove')} disabled={submitting}><Trash2 /></button>
+          </article>
+        ))}
       </div>
     </Card>
   );

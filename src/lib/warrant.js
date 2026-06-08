@@ -71,14 +71,14 @@ export function validateWarrantAccess(input = {}, now = new Date()) {
   const start = parseWarrantDate(input.accessStartTime || input.startTime);
   const end = parseWarrantDate(input.accessEndTime || input.expiresAt);
 
-  if (!warrantNumber) return { ok: false, message: 'Warrant number is required.' };
-  if (!courtOrderFileName) return { ok: false, message: 'Court order file is required.' };
-  if (!start) return { ok: false, message: 'Access start date and time are required.' };
-  if (!end) return { ok: false, message: 'Access end date and time are required.' };
-  if (end <= start) return { ok: false, message: 'Access end time must be after the start time.' };
-  if (end <= now) return { ok: false, message: 'This warrant has already expired.' };
-  if (!approvedBy) return { ok: false, message: 'Approved by is required.' };
-  if (!legalBasisNote) return { ok: false, message: 'Legal basis note is required.' };
+  if (!warrantNumber) return { ok: false, code: 'numberRequired', message: 'Warrant number is required.' };
+  if (!courtOrderFileName) return { ok: false, code: 'fileRequired', message: 'Court order file is required.' };
+  if (!start) return { ok: false, code: 'startRequired', message: 'Access start date and time are required.' };
+  if (!end) return { ok: false, code: 'endRequired', message: 'Access end date and time are required.' };
+  if (end <= start) return { ok: false, code: 'endAfterStart', message: 'Access end time must be after the start time.' };
+  if (end <= now) return { ok: false, code: 'alreadyExpired', message: 'This warrant has already expired.' };
+  if (!approvedBy) return { ok: false, code: 'approvedByRequired', message: 'Approved by is required.' };
+  if (!legalBasisNote) return { ok: false, code: 'legalBasisRequired', message: 'Legal basis note is required.' };
 
   const warrant = {
     number: warrantNumber,

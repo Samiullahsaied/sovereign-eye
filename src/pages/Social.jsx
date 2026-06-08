@@ -2,12 +2,14 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Card } from '../components/Card.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
+import { useT } from '../i18n/index.jsx';
 import { sanitizeText } from '../lib/validation.js';
 
-const DEFAULT_PLATFORM = 'فیسبوک';
+const PLATFORM_KEYS = ['facebook', 'whatsapp', 'telegram', 'x'];
 
 export function Social({ targets, onAddTarget, onRemoveTarget, query }) {
-  const [form, setForm] = useState({ platform: DEFAULT_PLATFORM, target: '', reason: '' });
+  const t = useT();
+  const [form, setForm] = useState({ platform: 'facebook', target: '', reason: '' });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const filtered = targets.filter((target) => `${target.platform} ${target.target} ${target.reason}`.toLowerCase().includes(query.toLowerCase()));
@@ -17,63 +19,50 @@ export function Social({ targets, onAddTarget, onRemoveTarget, query }) {
     const target = sanitizeText(form.target);
     const reason = sanitizeText(form.reason);
     if (!target || !reason) {
-      setError('لینک/شمېره او دلیل دواړه اړین دي.');
+      setError(t('social.required'));
       return;
     }
 
     setSubmitting(true);
     setError('');
     try {
-      const ok = await onAddTarget({ platform: form.platform, target, reason });
+      const platformLabel = t(`social.platforms.${form.platform}`);
+      const ok = await onAddTarget({ platform: platformLabel, target, reason });
       if (ok === false) {
-        setError('Target could not be saved. Check Supabase connection and table policies.');
+        setError(t('social.saveFailed'));
         return;
       }
-      setForm({ platform: DEFAULT_PLATFORM, target: '', reason: '' });
+      setForm({ platform: 'facebook', target: '', reason: '' });
     } catch (err) {
-      setError(err.message || 'Target could not be saved.');
+      setError(err.message || t('social.saveError'));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Card title="د ټولنیزو رسنیو څارنه (workflow)">
+    <Card title={t('social.title')}>
       <form className="inline-form" onSubmit={submit}>
         <label>
-          <span>پلاتفورم</span>
+          <span>{t('social.platform')}</span>
           <select value={form.platform} onChange={(event) => setForm({ ...form, platform: event.target.value })} disabled={submitting}>
-            <option>فیسبوک</option>
-            <option>واټس اپ</option>
-            <option>ټیلیګرام</option>
-            <option>ایکس</option>
+            {PLATFORM_KEYS.map((key) => <option key={key} value={key}>{t(`social.platforms.${key}`)}</option>)}
           </select>
         </label>
-        <label>
-          <span>هدف</span>
-          <input value={form.target} onChange={(event) => setForm({ ...form, target: event.target.value })} placeholder="لینک / شمېره" disabled={submitting} />
-        </label>
-        <label>
-          <span>دلیل</span>
-          <input value={form.reason} onChange={(event) => setForm({ ...form, reason: event.target.value })} placeholder="قانوني دلیل" disabled={submitting} />
-        </label>
-        <button className="btn primary" type="submit" disabled={submitting}><Plus /> {submitting ? 'Saving...' : 'اضافه'}</button>
+        <label><span>{t('social.target')}</span><input value={form.target} onChange={(event) => setForm({ ...form, target: event.target.value })} placeholder={t('social.targetPlaceholder')} disabled={submitting} /></label>
+        <label><span>{t('social.reason')}</span><input value={form.reason} onChange={(event) => setForm({ ...form, reason: event.target.value })} placeholder={t('social.reasonPlaceholder')} disabled={submitting} /></label>
+        <button className="btn primary" type="submit" disabled={submitting}><Plus /> {submitting ? t('common.saving') : t('common.add')}</button>
       </form>
       {error && <p className="form-error">{error}</p>}
       <div className="item-list">
         {filtered.length === 0 ? (
-          <EmptyState title="هدف نشته" body="هدفونه د قانوني دلیل سره ثبت کړئ." />
-        ) : (
-          filtered.map((item) => (
-            <article className="list-card" key={item.id}>
-              <div>
-                <strong>{item.platform}: {item.target}</strong>
-                <span>{item.reason}</span>
-              </div>
-              <button className="icon-button" type="button" onClick={() => onRemoveTarget(item.id)} aria-label="Remove target" disabled={submitting}><Trash2 /></button>
-            </article>
-          ))
-        )}
+          <EmptyState title={t('social.emptyTitle')} body={t('social.emptyBody')} />
+        ) : filtered.map((item) => (
+          <article className="list-card" key={item.id}>
+            <div><strong>{item.platform}: {item.target}</strong><span>{item.reason}</span></div>
+            <button className="icon-button" type="button" onClick={() => onRemoveTarget(item.id)} aria-label={t('social.removeTarget')} disabled={submitting}><Trash2 /></button>
+          </article>
+        ))}
       </div>
     </Card>
   );

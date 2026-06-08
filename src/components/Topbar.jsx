@@ -1,4 +1,5 @@
 import { Loader2, Menu, Moon, Search, Sun } from 'lucide-react';
+import { SUPPORTED_LANGUAGES, useT } from '../i18n/index.jsx';
 
 export function Topbar({
   lang,
@@ -12,6 +13,7 @@ export function Topbar({
   onSearchSubmit,
   onToggleSidebar
 }) {
+  const t = useT();
   const initial = user?.name?.trim()?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U';
 
   const submitSearch = (event) => {
@@ -23,34 +25,30 @@ export function Topbar({
     <header className="topbar">
       <div className="brand">
         <span className="brand-mark">◎</span>
-        <span>Sovereign Eye</span>
+        <span>{t('app.product')}</span>
       </div>
       <form className="search-box" onSubmit={submitSearch} role="search">
-        <span className="sr-only">Search dashboard data</span>
-        <input value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="پلټنه..." />
-        <button type="submit" aria-label="Search dashboard data" disabled={searchLoading}>
+        <span className="sr-only">{t('common.search')}</span>
+        <input value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder={t('common.searchPlaceholder')} />
+        <button type="submit" aria-label={t('common.search')} disabled={searchLoading}>
           {searchLoading ? <Loader2 aria-hidden="true" className="spin" /> : <Search aria-hidden="true" />}
         </button>
       </form>
       <div className="topbar-actions">
-        <div className="language-tabs" aria-label="Language">
-          {[
-            ['ps', 'پښتو'],
-            ['dr', 'دری'],
-            ['en', 'EN']
-          ].map(([value, label]) => (
+        <div className="language-tabs" aria-label={t('common.language')}>
+          {SUPPORTED_LANGUAGES.map((value) => (
             <button key={value} type="button" className={lang === value ? 'active' : ''} onClick={() => onLangChange(value)}>
-              {label}
+              {t(`lang.${value}`)}
             </button>
           ))}
         </div>
-        <button className="icon-button" type="button" onClick={onThemeToggle} aria-label="Toggle theme">
+        <button className="icon-button" type="button" onClick={onThemeToggle} aria-label={t('common.toggleTheme')}>
           {theme === 'light' ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
         </button>
-        <div className="avatar" aria-label={user?.roleLabel || 'Current user'} title={user?.roleLabel || ''}>
+        <div className="avatar" aria-label={user?.roleLabel || t('common.currentUser')} title={user?.roleLabel || ''}>
           {initial}
         </div>
-        <button className="icon-button menu-button" type="button" onClick={onToggleSidebar} aria-label="Open menu">
+        <button className="icon-button menu-button" type="button" onClick={onToggleSidebar} aria-label={t('common.openMenu')}>
           <Menu aria-hidden="true" />
         </button>
       </div>

@@ -2,6 +2,7 @@ import {
   Bot,
   BrainCircuit,
   ChartLine,
+  Circle,
   ClipboardList,
   FolderOpen,
   Gauge,
@@ -16,9 +17,9 @@ import {
   Settings,
   Share2,
   ShieldCheck,
-  Users,
-  Circle
+  Users
 } from 'lucide-react';
+import { useT } from '../i18n/index.jsx';
 
 const ICONS = {
   Bot,
@@ -41,8 +42,10 @@ const ICONS = {
 };
 
 export function Sidebar({ activePage, items, onNavigate, open, onLogout }) {
+  const t = useT();
+
   return (
-    <aside className={`sidebar ${open ? 'is-open' : ''}`} aria-label="Main navigation">
+    <aside className={`sidebar ${open ? 'is-open' : ''}`} aria-label={t('common.openMenu')}>
       <nav>
         {items.map((item) => {
           const Icon = ICONS[item.icon] ?? Circle;
@@ -54,13 +57,13 @@ export function Sidebar({ activePage, items, onNavigate, open, onLogout }) {
               onClick={() => onNavigate(item.id)}
             >
               <Icon aria-hidden="true" />
-              <span>{item.label}</span>
+              <span>{t(item.labelKey)}</span>
             </button>
           );
         })}
         <button className="nav-link danger" type="button" onClick={onLogout}>
           <LogOut aria-hidden="true" />
-          <span>وتل</span>
+          <span>{t('nav.logout')}</span>
         </button>
       </nav>
     </aside>

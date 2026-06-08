@@ -1,12 +1,13 @@
 import { ShieldCheck } from 'lucide-react';
 import { Card } from '../components/Card.jsx';
-import { PRIVACY_RULES } from '../data/appConstants.js';
+import { useT } from '../i18n/index.jsx';
 
 export function Privacy() {
+  const t = useT();
   return (
-    <Card title="د حریم اصول" icon={<ShieldCheck />}>
+    <Card title={t('privacy.title')} icon={<ShieldCheck />}>
       <ul className="rule-list">
-        {PRIVACY_RULES.map((rule) => <li key={rule}>{rule}</li>)}
+        {t('privacy.rules').map((rule) => <li key={rule}>{rule}</li>)}
       </ul>
     </Card>
   );

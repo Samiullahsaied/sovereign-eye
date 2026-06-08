@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { I18nProvider } from '../i18n/index.jsx';
 import { Dashboard } from './Dashboard.jsx';
 
 vi.mock('react-leaflet', () => ({
@@ -12,26 +13,28 @@ vi.mock('react-leaflet', () => ({
 describe('Dashboard IPinfo result panel', () => {
   it('renders live lookup results returned by the secure backend endpoint', () => {
     render(
-      <Dashboard
-        cases={[]}
-        trafficData={[]}
-        alerts={[]}
-        dataLoading={false}
-        ipLookup={{
-          loading: false,
-          error: '',
-          result: {
-            ip: '8.8.8.8',
-            city: 'Mountain View',
-            region: 'California',
-            country: 'US',
-            org: 'AS15169 Google LLC',
-            privacy: { vpn: false, proxy: false, tor: false }
-          }
-        }}
-        onDismissAlert={() => {}}
-        onFaceCheck={() => {}}
-      />
+      <I18nProvider lang="en">
+        <Dashboard
+          cases={[]}
+          trafficData={[]}
+          alerts={[]}
+          dataLoading={false}
+          ipLookup={{
+            loading: false,
+            error: '',
+            result: {
+              ip: '8.8.8.8',
+              city: 'Mountain View',
+              region: 'California',
+              country: 'US',
+              org: 'AS15169 Google LLC',
+              privacy: { vpn: false, proxy: false, tor: false }
+            }
+          }}
+          onDismissAlert={() => {}}
+          onFaceCheck={() => {}}
+        />
+      </I18nProvider>
     );
 
     expect(screen.getByText('IPinfo lookup')).toBeInTheDocument();

@@ -1,13 +1,8 @@
 import { BrainCircuit, Download, Network, Plus, StickyNote } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Card } from '../components/Card.jsx';
-import {
-  IDENTITY_WARNING,
-  SAFE_SAMPLE_IDENTITIES,
-  buildGraphEdges,
-  calculateIdentitySimilarity,
-  createAssistantExplanation
-} from '../lib/behavioralIdentity.js';
+import { useT } from '../i18n/index.jsx';
+import { SAFE_SAMPLE_IDENTITIES, buildGraphEdges, calculateIdentitySimilarity } from '../lib/behavioralIdentity.js';
 import { sanitizeText } from '../lib/validation.js';
 
 const EMPTY_IDENTITY = {
@@ -34,17 +29,38 @@ function nodePosition(index, count) {
   const radiusX = 190;
   const radiusY = 95;
   const angle = ((Math.PI * 2) / Math.max(count, 1)) * index - Math.PI / 2;
-  return {
-    x: centerX + Math.cos(angle) * radiusX,
-    y: centerY + Math.sin(angle) * radiusY
-  };
+  return { x: centerX + Math.cos(angle) * radiusX, y: centerY + Math.sin(angle) * radiusY };
 }
 
-function GraphView({ identities, edges }) {
+function levelKey(level) {
+  if (/High/i.test(level)) return 'high';
+  if (/Medium/i.test(level)) return 'medium';
+  if (/Low/i.test(level)) return 'low';
+  return 'review';
+}
+
+function reasonKey(reason) {
+  if (/Select at least two/i.test(reason)) return 'selectTwo';
+  if (/Typing profile/i.test(reason)) return 'typing';
+  if (/Language style/i.test(reason)) return 'writing';
+  if (/Activity windows/i.test(reason)) return 'activity';
+  if (/Device hints/i.test(reason)) return 'device';
+  if (/Case or network/i.test(reason)) return 'network';
+  return 'limited';
+}
+
+function confidenceText(result, t) {
+  if (result.overall_similarity_score >= 70) return t('common.high');
+  if (result.overall_similarity_score >= 40) return t('common.medium');
+  if (result.overall_similarity_score > 0) return t('common.low');
+  return t('behavioral.levels.review');
+}
+
+function GraphView({ identities, edges, graphLabel, t }) {
   const positions = Object.fromEntries(identities.map((identity, index) => [identity.id, nodePosition(index, identities.length)]));
 
   return (
-    <div className="identity-graph" aria-label="Behavioral identity similarity graph">
+    <div className="identity-graph" aria-label={graphLabel}>
       <svg viewBox="0 0 520 300" role="img">
         {edges.map((edge) => {
           const source = positions[edge.source];
@@ -64,7 +80,7 @@ function GraphView({ identities, edges }) {
             <g key={identity.id}>
               <circle className={identity.dataMode === 'sample' ? 'identity-node sample' : 'identity-node'} cx={position.x} cy={position.y} r="34" />
               <text className="identity-node-label" x={position.x} y={position.y - 3}>{identity.account_name}</text>
-              <text className="identity-node-meta" x={position.x} y={position.y + 13}>{identity.platform}</text>
+              <text className="identity-node-meta" x={position.x} y={position.y + 13}>{identity.platform} · {identity.dataMode === 'sample' ? t('behavioral.sample') : t('behavioral.local')}</text>
             </g>
           );
         })}
@@ -74,6 +90,7 @@ function GraphView({ identities, edges }) {
 }
 
 export function BehavioralIdentityGraph({ onAudit, onEvidenceNote }) {
+  const t = useT();
   const [identities, setIdentities] = useState(SAFE_SAMPLE_IDENTITIES);
   const [selectedIds, setSelectedIds] = useState(() => SAFE_SAMPLE_IDENTITIES.slice(0, 2).map((item) => item.id));
   const [form, setForm] = useState(EMPTY_IDENTITY);
@@ -83,24 +100,20 @@ export function BehavioralIdentityGraph({ onAudit, onEvidenceNote }) {
   const [assistantResult, setAssistantResult] = useState(null);
   const viewedLogged = useRef(false);
 
-  const selectedIdentities = useMemo(
-    () => identities.filter((identity) => selectedIds.includes(identity.id)),
-    [identities, selectedIds]
-  );
+  const selectedIdentities = useMemo(() => identities.filter((identity) => selectedIds.includes(identity.id)), [identities, selectedIds]);
   const graphEdges = useMemo(() => buildGraphEdges(selectedIdentities), [selectedIdentities]);
 
   useEffect(() => {
     if (viewedLogged.current) return;
     viewedLogged.current = true;
-    onAudit?.('graph viewed', 'Behavioral Identity Graph');
-  }, [onAudit]);
+    onAudit?.('graph viewed', t('behavioral.title'));
+  }, [onAudit, t]);
 
   const updateForm = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
   const addIdentity = (event) => {
     event.preventDefault();
     if (!form.account_name.trim() || !form.platform.trim() || !form.username.trim()) return;
-
     const identity = {
       id: `local-${Date.now()}`,
       account_name: sanitizeText(form.account_name),
@@ -113,58 +126,48 @@ export function BehavioralIdentityGraph({ onAudit, onEvidenceNote }) {
       known_case_id: sanitizeText(form.known_case_id),
       dataMode: 'local'
     };
-
     setIdentities((items) => [identity, ...items]);
     setSelectedIds((items) => [...new Set([identity.id, ...items])].slice(0, 4));
     setForm(EMPTY_IDENTITY);
   };
 
-  const toggleSelected = (id) => {
-    setSelectedIds((items) => (
-      items.includes(id) ? items.filter((item) => item !== id) : [...items, id]
-    ));
-  };
+  const toggleSelected = (id) => setSelectedIds((items) => (items.includes(id) ? items.filter((item) => item !== id) : [...items, id]));
 
   const generateScore = () => {
     const result = calculateIdentitySimilarity(selectedIdentities);
     setLastResult(result);
     setAssistantResult(null);
-    onAudit?.('identity comparison created', `${selectedIdentities.length} identities selected`);
-    onAudit?.('similarity score generated', `${selectedIdentities.length} identities - ${result.overall_similarity_score}%`);
+    onAudit?.('identity comparison created', `${selectedIdentities.length}`);
+    onAudit?.('similarity score generated', `${result.overall_similarity_score}%`);
   };
 
   const addNote = () => {
     const clean = sanitizeText(note);
     if (!clean || !lastResult) return;
-    const entry = {
-      id: `note-${Date.now()}`,
-      text: clean,
-      score: lastResult.overall_similarity_score,
-      createdAt: new Date().toLocaleString()
-    };
+    const entry = { id: `note-${Date.now()}`, text: clean, score: lastResult.overall_similarity_score, createdAt: new Date().toLocaleString() };
     setNotes((items) => [entry, ...items]);
     setNote('');
     onAudit?.('analyst note added', clean);
-    onEvidenceNote?.('Behavioral identity analyst note', clean);
+    onEvidenceNote?.('behavioral identity analyst note', clean);
   };
 
   const explain = () => {
     const result = lastResult || calculateIdentitySimilarity(selectedIdentities);
     setLastResult(result);
-    setAssistantResult(createAssistantExplanation(result));
+    setAssistantResult({
+      summary: t('behavioral.explanationSummary', { level: t(`behavioral.levels.${levelKey(result.level)}`), score: result.overall_similarity_score }),
+      supportingSignals: result.reasons.map((reason) => t(`behavioral.reasons.${reasonKey(reason)}`)),
+      uncertainty: t('behavioral.explanationUncertainty'),
+      recommendedNextStep: t('behavioral.explanationNextStep'),
+      requiredHumanReview: t('behavioral.explanationReview')
+    });
   };
 
   const exportComparison = () => {
     const result = lastResult || calculateIdentitySimilarity(selectedIdentities);
     const rows = [
       ['account_name', 'platform', 'username', 'overall_similarity_score', 'level'],
-      ...selectedIdentities.map((identity) => [
-        identity.account_name,
-        identity.platform,
-        identity.username,
-        result.overall_similarity_score,
-        result.level
-      ])
+      ...selectedIdentities.map((identity) => [identity.account_name, identity.platform, identity.username, result.overall_similarity_score, result.level])
     ];
     const blob = new Blob([rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n')], { type: 'text/csv' });
     const anchor = document.createElement('a');
@@ -172,81 +175,73 @@ export function BehavioralIdentityGraph({ onAudit, onEvidenceNote }) {
     anchor.download = 'behavioral_identity_comparison.csv';
     anchor.click();
     URL.revokeObjectURL(anchor.href);
-    onAudit?.('comparison exported', `${selectedIdentities.length} identities`);
+    onAudit?.('comparison exported', `${selectedIdentities.length}`);
   };
 
   return (
     <div className="page-stack">
-      <Card title="Behavioral Identity Graph / د رفتاري هویت نقشه" icon={<Network aria-hidden="true" />}>
-        <div className="notice">{IDENTITY_WARNING}</div>
+      <Card title={t('behavioral.title')} icon={<Network aria-hidden="true" />}>
+        <div className="notice">{t('behavioral.warning')}</div>
         <div className="identity-layout">
           <div>
             <div className="identity-selection">
               {identities.map((identity) => (
                 <label key={identity.id} className="identity-option">
                   <input type="checkbox" checked={selectedIds.includes(identity.id)} onChange={() => toggleSelected(identity.id)} />
-                  <span>
-                    <strong>{identity.account_name}</strong>
-                    <small>{identity.platform} - @{identity.username} {identity.dataMode === 'sample' ? '(sample)' : '(local)'}</small>
-                  </span>
+                  <span><strong>{identity.account_name}</strong><small>{identity.platform} - @{identity.username} ({identity.dataMode === 'sample' ? t('behavioral.sample') : t('behavioral.local')})</small></span>
                 </label>
               ))}
             </div>
           </div>
-          <GraphView identities={selectedIdentities} edges={graphEdges} />
+          <GraphView identities={selectedIdentities} edges={graphEdges} graphLabel={t('behavioral.graphLabel')} t={t} />
         </div>
         <div className="button-row">
-          <button className="btn primary" type="button" onClick={generateScore}>Generate similarity score</button>
-          <button className="btn" type="button" onClick={explain}><BrainCircuit aria-hidden="true" /> AI explanation</button>
-          <button className="btn" type="button" onClick={exportComparison}><Download aria-hidden="true" /> Export</button>
+          <button className="btn primary" type="button" onClick={generateScore}>{t('behavioral.generateScore')}</button>
+          <button className="btn" type="button" onClick={explain}><BrainCircuit aria-hidden="true" /> {t('behavioral.aiExplanation')}</button>
+          <button className="btn" type="button" onClick={exportComparison}><Download aria-hidden="true" /> {t('common.export')}</button>
         </div>
       </Card>
 
       <div className="grid two">
-        <Card title="Add identity/account" icon={<Plus aria-hidden="true" />}>
+        <Card title={t('behavioral.addIdentity')} icon={<Plus aria-hidden="true" />}>
           <form className="form-grid" onSubmit={addIdentity}>
-            <label><span>Account name</span><input value={form.account_name} onChange={(event) => updateForm('account_name', event.target.value)} required /></label>
-            <label><span>Platform</span><input value={form.platform} onChange={(event) => updateForm('platform', event.target.value)} required /></label>
-            <label><span>Username</span><input value={form.username} onChange={(event) => updateForm('username', event.target.value)} required /></label>
-            <label><span>Device hint</span><input value={form.device_hint} onChange={(event) => updateForm('device_hint', event.target.value)} /></label>
-            <label><span>Typing profile ID</span><input value={form.typing_profile_id} onChange={(event) => updateForm('typing_profile_id', event.target.value)} /></label>
-            <label><span>Activity times</span><input value={form.activity_times} onChange={(event) => updateForm('activity_times', event.target.value)} placeholder="08:00, 20:00, 21:00" /></label>
-            <label><span>Language style notes</span><textarea rows={3} value={form.language_style_notes} onChange={(event) => updateForm('language_style_notes', event.target.value)} /></label>
-            <label><span>Known case ID</span><input value={form.known_case_id} onChange={(event) => updateForm('known_case_id', event.target.value)} /></label>
-            <button className="btn primary" type="submit">Add account</button>
+            <label><span>{t('behavioral.accountName')}</span><input value={form.account_name} onChange={(event) => updateForm('account_name', event.target.value)} required /></label>
+            <label><span>{t('behavioral.platform')}</span><input value={form.platform} onChange={(event) => updateForm('platform', event.target.value)} required /></label>
+            <label><span>{t('behavioral.username')}</span><input value={form.username} onChange={(event) => updateForm('username', event.target.value)} required /></label>
+            <label><span>{t('behavioral.deviceHint')}</span><input value={form.device_hint} onChange={(event) => updateForm('device_hint', event.target.value)} /></label>
+            <label><span>{t('behavioral.typingProfileId')}</span><input value={form.typing_profile_id} onChange={(event) => updateForm('typing_profile_id', event.target.value)} /></label>
+            <label><span>{t('behavioral.activityTimes')}</span><input value={form.activity_times} onChange={(event) => updateForm('activity_times', event.target.value)} placeholder="08:00, 20:00, 21:00" /></label>
+            <label><span>{t('behavioral.languageStyleNotes')}</span><textarea rows={3} value={form.language_style_notes} onChange={(event) => updateForm('language_style_notes', event.target.value)} /></label>
+            <label><span>{t('behavioral.knownCaseId')}</span><input value={form.known_case_id} onChange={(event) => updateForm('known_case_id', event.target.value)} /></label>
+            <button className="btn primary" type="submit">{t('behavioral.addAccount')}</button>
           </form>
         </Card>
 
-        <Card title="Similarity result">
-          {!lastResult && <div className="empty-state">Generate a score to view behavioral similarity estimates.</div>}
+        <Card title={t('behavioral.similarityResult')}>
+          {!lastResult && <div className="empty-state">{t('behavioral.resultEmpty')}</div>}
           {lastResult && (
             <div className="result-panel">
-              <div><strong>Overall:</strong> <span className={`badge ${scoreClass(lastResult.overall_similarity_score)}`}>{lastResult.overall_similarity_score}% - {lastResult.level}</span></div>
-              <div>Confidence: <strong>{lastResult.confidence_label}</strong></div>
-              <div>Typing similarity: <strong>{lastResult.typing_similarity}%</strong></div>
-              <div>Writing style similarity: <strong>{lastResult.writing_style_similarity}%</strong></div>
-              <div>Activity time similarity: <strong>{lastResult.activity_time_similarity}%</strong></div>
-              <div>Device pattern similarity: <strong>{lastResult.device_pattern_similarity}%</strong></div>
-              <div>Network signal similarity: <strong>{lastResult.network_signal_similarity}%</strong></div>
-              <ul className="rule-list">
-                {lastResult.reasons.map((reason) => <li key={reason}>{reason}</li>)}
-              </ul>
+              <div><strong>{t('behavioral.overall')}:</strong> <span className={`badge ${scoreClass(lastResult.overall_similarity_score)}`}>{lastResult.overall_similarity_score}% - {t(`behavioral.levels.${levelKey(lastResult.level)}`)}</span></div>
+              <div>{t('behavioral.confidence')}: <strong>{confidenceText(lastResult, t)}</strong></div>
+              <div>{t('behavioral.typingSimilarity')}: <strong>{lastResult.typing_similarity}%</strong></div>
+              <div>{t('behavioral.writingStyleSimilarity')}: <strong>{lastResult.writing_style_similarity}%</strong></div>
+              <div>{t('behavioral.activityTimeSimilarity')}: <strong>{lastResult.activity_time_similarity}%</strong></div>
+              <div>{t('behavioral.devicePatternSimilarity')}: <strong>{lastResult.device_pattern_similarity}%</strong></div>
+              <div>{t('behavioral.networkSignalSimilarity')}: <strong>{lastResult.network_signal_similarity}%</strong></div>
+              <ul className="rule-list">{lastResult.reasons.map((reason) => <li key={reason}>{t(`behavioral.reasons.${reasonKey(reason)}`)}</li>)}</ul>
             </div>
           )}
         </Card>
       </div>
 
       <div className="grid two">
-        <Card title="Evidence notes" icon={<StickyNote aria-hidden="true" />}>
-          <label className="full-label">
-            <span>Analyst note</span>
-            <textarea rows={4} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Explain why selected accounts may require review." />
-          </label>
-          <button className="btn primary" type="button" onClick={addNote} disabled={!lastResult || !note.trim()}>Attach note</button>
+        <Card title={t('behavioral.evidenceNotes')} icon={<StickyNote aria-hidden="true" />}>
+          <label className="full-label"><span>{t('behavioral.analystNote')}</span><textarea rows={4} value={note} onChange={(event) => setNote(event.target.value)} placeholder={t('behavioral.notePlaceholder')} /></label>
+          <button className="btn primary" type="button" onClick={addNote} disabled={!lastResult || !note.trim()}>{t('behavioral.attachNote')}</button>
           <div className="item-list">
             {notes.map((item) => (
               <div className="timeline-item" key={item.id}>
-                <strong>{item.score}% estimate</strong>
+                <strong>{t('behavioral.estimate', { score: item.score })}</strong>
                 <span>{item.text}</span>
                 <small>{item.createdAt}</small>
               </div>
@@ -254,15 +249,15 @@ export function BehavioralIdentityGraph({ onAudit, onEvidenceNote }) {
           </div>
         </Card>
 
-        <Card title="AI-assisted explanation" icon={<BrainCircuit aria-hidden="true" />}>
-          {!assistantResult && <div className="empty-state">AI explanation will summarize signals without making final claims.</div>}
+        <Card title={t('behavioral.aiExplanation')} icon={<BrainCircuit aria-hidden="true" />}>
+          {!assistantResult && <div className="empty-state">{t('behavioral.aiEmpty')}</div>}
           {assistantResult && (
             <div className="result-panel">
-              <div><strong>Summary:</strong> {assistantResult.summary}</div>
-              <div><strong>Supporting signals:</strong> {assistantResult.supportingSignals.join(' ')}</div>
-              <div><strong>Uncertainty:</strong> {assistantResult.uncertainty}</div>
-              <div><strong>Recommended next step:</strong> {assistantResult.recommendedNextStep}</div>
-              <div><strong>Required human review:</strong> {assistantResult.requiredHumanReview}</div>
+              <div><strong>{t('assistant.summary')}:</strong> {assistantResult.summary}</div>
+              <div><strong>{t('behavioral.supportingSignals')}:</strong> {assistantResult.supportingSignals.join(' ')}</div>
+              <div><strong>{t('behavioral.uncertainty')}:</strong> {assistantResult.uncertainty}</div>
+              <div><strong>{t('behavioral.recommendedNextStep')}:</strong> {assistantResult.recommendedNextStep}</div>
+              <div><strong>{t('behavioral.requiredHumanReview')}:</strong> {assistantResult.requiredHumanReview}</div>
             </div>
           )}
         </Card>

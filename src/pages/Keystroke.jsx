@@ -1,9 +1,11 @@
 import { Keyboard } from 'lucide-react';
 import { useState } from 'react';
 import { Card } from '../components/Card.jsx';
+import { useT } from '../i18n/index.jsx';
 import { compareTypingFingerprint, createTypingFingerprint } from '../lib/fingerprint.js';
 
 export function Keystroke({ storedFingerprint, onSaveFingerprint, onHighSimilarity }) {
+  const t = useT();
   const [oldSample, setOldSample] = useState('');
   const [newSample, setNewSample] = useState('');
   const [message, setMessage] = useState('');
@@ -12,51 +14,43 @@ export function Keystroke({ storedFingerprint, onSaveFingerprint, onHighSimilari
   const save = async () => {
     const fingerprint = createTypingFingerprint(oldSample);
     if (!fingerprint) {
-      setMessage('لږ تر لږه 10 توري ولیکئ.');
+      setMessage(t('keystroke.minSave'));
       setScore(null);
       return;
     }
-    if (onSaveFingerprint && !await onSaveFingerprint(fingerprint)) {
-      return;
-    }
-    setMessage('نمونه ثبت شوه.');
+    if (onSaveFingerprint && !await onSaveFingerprint(fingerprint)) return;
+    setMessage(t('keystroke.saveSuccess'));
     setScore(null);
   };
 
   const compare = async () => {
     if (!storedFingerprint) {
-      setMessage('لومړی پخوانۍ نمونه ثبت کړئ.');
+      setMessage(t('keystroke.needPrevious'));
       setScore(null);
       return;
     }
     if (!createTypingFingerprint(newSample)) {
-      setMessage('د پرتله کولو لپاره لږ تر لږه 10 توري ولیکئ.');
+      setMessage(t('keystroke.minCompare'));
       setScore(null);
       return;
     }
     const value = compareTypingFingerprint(storedFingerprint, newSample);
     setScore(value);
-    setMessage(value >= 70 ? 'لوړ ورته والی وموندل شو.' : 'ورته والی ټیټ یا منځنی دی.');
+    setMessage(value >= 70 ? t('keystroke.highFound') : t('keystroke.moderateFound'));
     if (value >= 70) await onHighSimilarity(value);
   };
 
   return (
-    <Card title="کیبورډ بایومتریک">
-      <div className="notice">دا د typing pattern داخلي ارزونه ده او د هویت وروستۍ ثبوت نه ګڼل کېږي.</div>
+    <Card title={t('keystroke.title')}>
+      <div className="notice">{t('keystroke.notice')}</div>
       <div className="form-grid wide">
-        <label>
-          <span>پخوانی نمونه</span>
-          <textarea rows={4} value={oldSample} onChange={(event) => setOldSample(event.target.value)} />
-        </label>
-        <button className="btn primary" type="button" onClick={save}><Keyboard /> ثبت</button>
-        <label>
-          <span>نوی نمونه</span>
-          <textarea rows={4} value={newSample} onChange={(event) => setNewSample(event.target.value)} />
-        </label>
-        <button className="btn" type="button" onClick={compare} disabled={!storedFingerprint}>ورته والی</button>
+        <label><span>{t('keystroke.oldSample')}</span><textarea rows={4} value={oldSample} onChange={(event) => setOldSample(event.target.value)} /></label>
+        <button className="btn primary" type="button" onClick={save}><Keyboard /> {t('keystroke.register')}</button>
+        <label><span>{t('keystroke.newSample')}</span><textarea rows={4} value={newSample} onChange={(event) => setNewSample(event.target.value)} /></label>
+        <button className="btn" type="button" onClick={compare} disabled={!storedFingerprint}>{t('keystroke.similarity')}</button>
       </div>
       {message && <p className="result-message">{message}</p>}
-      {score !== null && <span className={`badge ${score >= 70 ? 'danger' : score >= 40 ? 'warn' : 'ok'}`}>ورته والی: {score}%</span>}
+      {score !== null && <span className={`badge ${score >= 70 ? 'danger' : score >= 40 ? 'warn' : 'ok'}`}>{t('keystroke.score', { score })}</span>}
     </Card>
   );
 }

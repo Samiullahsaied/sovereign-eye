@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { I18nProvider } from '../i18n/index.jsx';
 import { Topbar } from './Topbar.jsx';
 
 const baseProps = {
@@ -16,7 +17,11 @@ const baseProps = {
 
 function renderTopbar(props = {}) {
   const merged = { ...baseProps, ...props };
-  render(<Topbar {...merged} />);
+  render(
+    <I18nProvider lang="en">
+      <Topbar {...merged} />
+    </I18nProvider>
+  );
   return merged;
 }
 
@@ -47,7 +52,7 @@ describe('Topbar interactions', () => {
   it('wires language, theme, and sidebar buttons', () => {
     const props = renderTopbar();
 
-    fireEvent.click(screen.getByRole('button', { name: 'EN' }));
+    fireEvent.click(screen.getByRole('button', { name: 'English' }));
     fireEvent.click(screen.getByRole('button', { name: /toggle theme/i }));
     fireEvent.click(screen.getByRole('button', { name: /open menu/i }));
 
