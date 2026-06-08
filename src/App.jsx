@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { LoginWizard } from './components/LoginWizard.jsx';
 import { Modal } from './components/Modal.jsx';
+import { PageErrorBoundary } from './components/PageErrorBoundary.jsx';
 import { Shell } from './components/Shell.jsx';
 import { ToastStack } from './components/Toast.jsx';
 import { NAV_ITEMS } from './data/appConstants.js';
@@ -629,9 +630,11 @@ export default function App() {
         onToggleSidebar={() => setSidebarOpen((open) => !open)}
         onRevokeWarrant={revokeAccess}
       >
-        <Suspense fallback={<section className="card loading-card">Loading section...</section>}>
-          {page}
-        </Suspense>
+        <PageErrorBoundary pageId={activePage} resetKey={activePage}>
+          <Suspense fallback={<section className="card loading-card">{activePage === 'assistant' ? 'Loading AI Assistant...' : 'Loading section...'}</section>}>
+            {page}
+          </Suspense>
+        </PageErrorBoundary>
       </Shell>
       <Modal open={Boolean(faceResult)} title="د مخ پیژندنې پایله" onClose={() => setFaceResult('')}>
         <p>{faceResult}</p>

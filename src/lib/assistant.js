@@ -30,8 +30,11 @@ export function runPermissionFirstAssistant(actionId, notes, context = {}) {
 
   return {
     action: action.label,
+    explanation: 'This assistant provides analysis only. It does not modify records, submit requests, approve access, revoke access, or contact external systems.',
+    impact: 'No operational change is made. The output is a recommendation for an authorized operator to review.',
     summary: `${basis} Current warrant status: ${warrantStatus}.`,
     riskLevel,
+    requiredPermissions: 'Authorized operator review and administrator approval are required before any sensitive follow-up.',
     recommendedNextStep: warrantStatus === 'Active'
       ? 'Review the analysis, attach it to the relevant case only after administrator approval, and preserve the audit trail.'
       : 'Renew or approve a valid warrant window before any operational follow-up.',

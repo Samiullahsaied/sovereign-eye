@@ -1,5 +1,5 @@
 import { Bot, ShieldCheck } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card } from '../components/Card.jsx';
 import { AI_ASSISTANT_ACTIONS, runPermissionFirstAssistant } from '../lib/assistant.js';
 
@@ -7,17 +7,36 @@ export function Assistant({ warrant, auditLog, alerts, statusRows, onApprovalReq
   const [actionId, setActionId] = useState('case');
   const [notes, setNotes] = useState('');
   const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const [isOffline, setIsOffline] = useState(() => typeof navigator !== 'undefined' && !navigator.onLine);
   const [approvalRequested, setApprovalRequested] = useState(false);
+
+  useEffect(() => {
+    const updateStatus = () => setIsOffline(typeof navigator !== 'undefined' && !navigator.onLine);
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+    return () => {
+      window.removeEventListener('online', updateStatus);
+      window.removeEventListener('offline', updateStatus);
+    };
+  }, []);
 
   const analyze = (event) => {
     event.preventDefault();
     setApprovalRequested(false);
-    setResult(runPermissionFirstAssistant(actionId, notes, {
-      warrant,
-      auditLog,
-      alerts,
-      statusRows
-    }));
+    setError('');
+
+    try {
+      setResult(runPermissionFirstAssistant(actionId, notes, {
+        warrant,
+        auditLog,
+        alerts,
+        statusRows
+      }));
+    } catch {
+      setResult(null);
+      setError('AI Assistant is temporarily unavailable');
+    }
   };
 
   const requestApproval = () => {
@@ -28,7 +47,9 @@ export function Assistant({ warrant, auditLog, alerts, statusRows, onApprovalReq
 
   return (
     <div className="page-stack">
-      <Card title="Permission-first AI Assistant" icon={Bot}>
+      <Card title="Permission-first AI Assistant" icon={<Bot aria-hidden="true" />}>
+        <div className="notice">AI Assistant is temporarily unavailable for external backend actions. Local permission-first analysis remains available.</div>
+        {isOffline && <div className="notice">Offline mode: AI Assistant is temporarily unavailable until network connectivity returns.</div>}
         <div className="notice">
           AI can analyze, summarize, diagnose, and suggest. It cannot change records or take action without administrator approval.
         </div>
@@ -52,13 +73,17 @@ export function Assistant({ warrant, auditLog, alerts, statusRows, onApprovalReq
           </label>
           <button className="btn primary" type="submit"><Bot aria-hidden="true" /> Analyze</button>
         </form>
+        {error && <p className="form-error">{error}</p>}
       </Card>
 
       {result && (
-        <Card title="AI Recommendation" icon={ShieldCheck}>
+        <Card title="AI Recommendation" icon={<ShieldCheck aria-hidden="true" />}>
           <div className="result-panel">
+            <div><strong>Explanation:</strong> {result.explanation}</div>
+            <div><strong>Impact:</strong> {result.impact}</div>
             <div><strong>Summary:</strong> {result.summary}</div>
             <div><strong>Risk level:</strong> {result.riskLevel}</div>
+            <div><strong>Required permissions:</strong> {result.requiredPermissions}</div>
             <div><strong>Recommended next step:</strong> {result.recommendedNextStep}</div>
             <div><strong>Required human approval:</strong> {result.requiredHumanApproval}</div>
             <div><strong>Automatic action:</strong> Not allowed</div>
