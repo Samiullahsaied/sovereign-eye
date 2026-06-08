@@ -21,11 +21,11 @@ alter table public.roles
 
 insert into public.roles (slug, label_en, label_ps, description)
 values
-  ('super_admin', 'Super Admin', '??? ?????', 'First account owner with unrestricted platform administration'),
-  ('admin', 'System Administrator', '????? ?????', 'Platform administration and user management'),
-  ('operations_officer', 'Operations Officer', '??????? ?????', 'Operational case and network workflows'),
-  ('legal_supervisor', 'Legal Supervisor', '?????? ????', 'Legal orders, audit review, and evidence oversight'),
-  ('viewer', 'Viewer', '??????', 'Read-only operational visibility')
+  ('super_admin', 'Super Admin', 'ستر اډمین', 'First account owner with unrestricted platform administration'),
+  ('admin', 'System Administrator', 'سیستم اډمین', 'Platform administration and user management'),
+  ('operations_officer', 'Operations Officer', 'عملیاتي مسئول', 'Operational case and network workflows'),
+  ('legal_supervisor', 'Legal Supervisor', 'قانوني ناظر', 'Legal orders, audit review, and evidence oversight'),
+  ('viewer', 'Viewer', 'کتونکی', 'Read-only operational visibility')
 on conflict (slug) do update
 set
   label_en = excluded.label_en,
