@@ -141,6 +141,20 @@ export const fa = {
       legalBasisRequired: 'یادداشت مبنای قانونی ضروری است.'
     }
   },
+  map: {
+    ...ps.map,
+    afghanistan: 'نقشه افغانستان',
+    noPoints: 'هنوز رکورد زنده‌ای موجود نیست',
+    provinceHeat: 'نقشه حرارتی ولایت‌ها',
+    noProvinceRows: 'هنوز رکورد زنده ولایت یا منطقه از Supabase موجود نیست.',
+    selectedProvince: 'ولایت انتخاب‌شده: {{province}}. جزئیات خطر زنده وقتی داده‌های ولایتی Supabase موجود باشد نمایش داده می‌شود.',
+    loadDemoData: 'بارگذاری داده‌های نمایشی',
+    clearDemoData: 'پاک کردن داده‌های نمایشی',
+    testDataLabel: 'TEST DATA',
+    demoDataNotice: 'داده‌های TEST DATA از Supabase نمایش داده می‌شود، چون رکورد واقعی ولایتی موجود نیست.',
+    realDataOverridesDemo: 'رکوردهای واقعی Supabase موجود است، بنابراین رکوردهای نمایشی پنهان شده‌اند.',
+    provinces: ['کابل', 'قندهار', 'هرات', 'ننگرهار', 'بلخ', 'غزنی', 'هلمند', 'کندز', 'پکتیا', 'فراه', 'بدخشان', 'خوست']
+  },
   health: {
     title: 'وضعیت سیستم',
     backendTitle: 'وضعیت داده‌های backend',
@@ -229,5 +243,10 @@ export const fa = {
     evidenceNotes: 'یادداشت‌های شواهد',
     analystNote: 'یادداشت تحلیلگر',
     attachNote: 'پیوست یادداشت'
+  },
+  toast: {
+    ...ps.toast,
+    demoDataLoaded: 'رکوردهای نمایشی نقشه در Supabase بارگذاری شد.',
+    demoDataCleared: 'رکوردهای نمایشی نقشه از Supabase پاک شد.'
   }
 };

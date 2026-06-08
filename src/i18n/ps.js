@@ -216,7 +216,20 @@ export const ps = {
   },
   network: { ...en.network, graph: 'د اړیکو شبکه', noRowsCanvas: 'د شبکې قطار نشته', trafficTable: 'د ترافیک جدول', noTraffic: 'ترافیک نشته', noTrafficBody: 'تر اوسه له Supabase څخه ژوندۍ ترافیکي ریکارډونه نشته.', exportCsv: 'CSV صادرول', headers: { time: 'وخت', country: 'هېواد', city: 'ښار' } },
   analytics: { ...en.analytics, monthlyOperations: 'میاشتني عملیات', riskLevel: 'د خطر کچه', networkPending: 'تر اوسه ژوندۍ ریکارډونه نشته', months: ['حمل', 'ثور', 'جوزا', 'سرطان', 'اسد', 'سنبله', 'میزان', 'عقرب', 'قوس', 'جدي', 'دلو', 'حوت'] },
-  map: { ...en.map, afghanistan: 'د افغانستان نقشه', noPoints: 'تر اوسه ژوندۍ ریکارډونه نشته', provinceHeat: 'ولایتي حرارت نقشه', noProvinceRows: 'تر اوسه له Supabase څخه د ولایت یا سیمې ژوندۍ ریکارډونه نشته.', selectedProvince: 'ټاکل شوی ولایت: {{province}}. ژوندۍ خطر جزئیات به د Supabase ولایتي معلوماتو سره ښکاره شي.', provinces: ['کابل', 'کندهار', 'هرات', 'ننګرهار', 'بلخ', 'غزني', 'هلمند', 'کندز', 'پکتیا', 'فراه', 'بدخشان', 'خوست'] },
+  map: {
+    ...en.map,
+    afghanistan: 'د افغانستان نقشه',
+    noPoints: 'تر اوسه ژوندۍ ریکارډونه نشته',
+    provinceHeat: 'ولایتي حرارت نقشه',
+    noProvinceRows: 'تر اوسه له Supabase څخه د ولایت یا سیمې ژوندۍ ریکارډونه نشته.',
+    selectedProvince: 'ټاکل شوی ولایت: {{province}}. ژوندۍ خطر جزئیات به د Supabase ولایتي معلوماتو سره ښکاره شي.',
+    loadDemoData: 'نمونه معلومات لوډ کړئ',
+    clearDemoData: 'نمونه معلومات پاک کړئ',
+    testDataLabel: 'TEST DATA',
+    demoDataNotice: 'د Supabase TEST DATA ښودل کېږي، ځکه اصلي ولایتي ریکارډونه نشته.',
+    realDataOverridesDemo: 'اصلي Supabase ریکارډونه شته، نو نمونه ریکارډونه پټ دي.',
+    provinces: ['کابل', 'کندهار', 'هرات', 'ننګرهار', 'بلخ', 'غزني', 'هلمند', 'کندز', 'پکتیا', 'فراه', 'بدخشان', 'خوست']
+  },
   phone: {
     ...en.phone,
     title: 'نړیوال تلیفون تعقیب',
@@ -380,6 +393,11 @@ export const ps = {
       limited: 'نښې محدودې یا کمزورې دي؛ پرتله یوازې د شنونکي کتنې لپاره وساتئ.'
     },
     levels: { high: 'لوړ ورته والی', medium: 'منځنی ورته والی', low: 'ټیټ ورته والی', review: 'انساني کتنې ته اړتیا لري' }
+  },
+  toast: {
+    ...en.toast,
+    demoDataLoaded: 'د نقشې نمونه ریکارډونه Supabase ته لوډ شول.',
+    demoDataCleared: 'د نقشې نمونه ریکارډونه له Supabase څخه پاک شول.'
   },
   face: { title: 'د مخ پېژندنې پایله', requiresBackend: 'د مخ پرتله کول منظور backend provider، مستند قانوني بنسټ، او انساني کتنې ته اړتیا لري.', result: 'په تولیدي حالت کې محلي مخ پرتله کول نه ترسره کېږي.' }
 };

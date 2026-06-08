@@ -241,6 +241,11 @@ export const en = {
     provinceHeat: 'Province heat map',
     noProvinceRows: 'No live province or region records are available from Supabase yet.',
     selectedProvince: 'Selected province: {{province}}. Live risk details will appear when Supabase status rows include province-level data.',
+    loadDemoData: 'Load Demo Data',
+    clearDemoData: 'Clear Demo Data',
+    testDataLabel: 'TEST DATA',
+    demoDataNotice: 'Showing Supabase TEST DATA because no real province records exist.',
+    realDataOverridesDemo: 'Real Supabase records are available, so demo records are hidden.',
     provinces: ['Kabul', 'Kandahar', 'Herat', 'Nangarhar', 'Balkh', 'Ghazni', 'Helmand', 'Kunduz', 'Paktia', 'Farah', 'Badakhshan', 'Khost']
   },
   phone: {
@@ -497,6 +502,8 @@ export const en = {
     supabaseRequired: 'Supabase connection is required for this action.',
     supabaseWriteFailed: 'Supabase write failed.',
     supabaseDeleteFailed: 'Supabase delete failed.',
+    demoDataLoaded: 'Demo map records loaded into Supabase.',
+    demoDataCleared: 'Demo map records cleared from Supabase.',
     accessRevoked: 'Legal access has been revoked.',
     accessExpired: 'Legal access window expired. Sensitive actions are blocked.',
     alertAckFailed: 'Alert acknowledgement failed.',

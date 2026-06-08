@@ -142,6 +142,20 @@ export const ar = {
       legalBasisRequired: 'ملاحظة الأساس القانوني مطلوبة.'
     }
   },
+  map: {
+    ...fa.map,
+    afghanistan: 'خريطة أفغانستان',
+    noPoints: 'لا توجد سجلات حية بعد',
+    provinceHeat: 'خريطة حرارة الولايات',
+    noProvinceRows: 'لا توجد سجلات حية للولاية أو المنطقة من Supabase بعد.',
+    selectedProvince: 'الولاية المحددة: {{province}}. ستظهر تفاصيل المخاطر الحية عند توفر بيانات الولاية في Supabase.',
+    loadDemoData: 'تحميل بيانات تجريبية',
+    clearDemoData: 'مسح البيانات التجريبية',
+    testDataLabel: 'TEST DATA',
+    demoDataNotice: 'يتم عرض TEST DATA من Supabase لأنه لا توجد سجلات ولاية حقيقية.',
+    realDataOverridesDemo: 'توجد سجلات Supabase حقيقية، لذلك تم إخفاء السجلات التجريبية.',
+    provinces: ['كابل', 'قندهار', 'هرات', 'ننكرهار', 'بلخ', 'غزنة', 'هلمند', 'قندوز', 'بكتيا', 'فراه', 'بدخشان', 'خوست']
+  },
   health: {
     title: 'حالة النظام',
     backendTitle: 'صحة بيانات backend',
@@ -230,5 +244,10 @@ export const ar = {
     evidenceNotes: 'ملاحظات الأدلة',
     analystNote: 'ملاحظة المحلل',
     attachNote: 'إرفاق الملاحظة'
+  },
+  toast: {
+    ...fa.toast,
+    demoDataLoaded: 'تم تحميل سجلات الخريطة التجريبية إلى Supabase.',
+    demoDataCleared: 'تم مسح سجلات الخريطة التجريبية من Supabase.'
   }
 };

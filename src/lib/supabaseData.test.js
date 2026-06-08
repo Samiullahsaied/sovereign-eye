@@ -67,4 +67,51 @@ describe('Supabase operational data mapper', () => {
     expect(data.deviceRecords).toEqual([]);
     expect(data.typingProfiles).toEqual([]);
   });
+
+  it('classifies seeded map traffic rows as demo data', async () => {
+    const tables = {
+      orders: queryResult([]),
+      audit_logs: queryResult([]),
+      evidence: queryResult([]),
+      status: queryResult([]),
+      settings: queryResult([]),
+      user_profiles: queryResult([]),
+      traffic_records: queryResult([{
+        id: 'demo-traffic-1',
+        ip: '192.0.2.10',
+        country: 'Afghanistan',
+        region: 'Kabul',
+        city: 'Kabul',
+        org: 'TEST DATA - Development seed',
+        latitude: 34.5553,
+        longitude: 69.2075,
+        vpn: true,
+        proxy: false,
+        tor: false,
+        relay: false,
+        hosting: false,
+        risk: 'high',
+        source: 'map_demo_seed',
+        metadata: { data_label: 'TEST DATA' },
+        observed_at: '2026-06-04T00:00:00Z',
+        created_at: '2026-06-04T00:00:00Z'
+      }]),
+      alerts: queryResult([]),
+      dashboard_stats: queryResult([]),
+      user_sessions: queryResult([]),
+      device_records: queryResult([]),
+      typing_profiles: queryResult([])
+    };
+
+    const client = {
+      from: vi.fn((table) => tables[table])
+    };
+
+    const data = await loadOperationalData(client);
+    const trafficHealth = data.dataHealth.tables.find((item) => item.table === 'traffic_records');
+
+    expect(data.trafficRecords[0].isTestData).toBe(true);
+    expect(data.trafficRecords[0].dataLabel).toBe('TEST DATA');
+    expect(trafficHealth.source).toBe('demo');
+  });
 });

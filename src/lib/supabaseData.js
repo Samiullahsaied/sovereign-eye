@@ -39,6 +39,7 @@ function mapOrder(row) {
 
 function mapTrafficRecord(row) {
   const metadata = row.metadata || {};
+  const isTestData = metadata.data_label === 'TEST DATA' || metadata.dataLabel === 'TEST DATA' || row.source === 'map_demo_seed';
   const privacy = {
     vpn: Boolean(row.vpn),
     proxy: Boolean(row.proxy),
@@ -63,10 +64,75 @@ function mapTrafficRecord(row) {
     hosting: privacy.hosting,
     risk: row.risk || 'normal',
     source: row.source || 'manual',
+    isTestData,
+    dataLabel: isTestData ? 'TEST DATA' : '',
     metadata,
     observedAtISO: row.observed_at,
     createdAtISO: row.created_at
   };
+}
+
+const DEMO_PROVINCE_ACTIVITY = [
+  { province: 'Kabul', city: 'Kabul', loc: [34.5553, 69.2075], count: 6 },
+  { province: 'Khost', city: 'Khost', loc: [33.3338, 69.9370], count: 3 },
+  { province: 'Herat', city: 'Herat', loc: [34.3529, 62.2040], count: 4 },
+  { province: 'Kandahar', city: 'Kandahar', loc: [31.6289, 65.7372], count: 5 },
+  { province: 'Nangarhar', city: 'Jalalabad', loc: [34.4342, 70.4478], count: 2 },
+  { province: 'Balkh', city: 'Mazar-i-Sharif', loc: [36.7069, 67.1122], count: 4 }
+];
+
+function riskFromCount(count) {
+  if (count >= 5) return 'high';
+  if (count >= 3) return 'medium';
+  return 'normal';
+}
+
+function buildDemoTrafficRows(userId) {
+  let sequence = 10;
+  const observedBase = Date.now();
+  return DEMO_PROVINCE_ACTIVITY.flatMap((province) => (
+    Array.from({ length: province.count }, (_, index) => {
+      const ip = `192.0.2.${sequence}`;
+      sequence += 1;
+      return {
+        captured_by: userId,
+        ip,
+        country: 'Afghanistan',
+        region: province.province,
+        city: province.city,
+        org: 'TEST DATA - Development seed',
+        latitude: province.loc[0],
+        longitude: province.loc[1],
+        vpn: index % 4 === 0,
+        proxy: false,
+        tor: false,
+        relay: false,
+        hosting: false,
+        risk: riskFromCount(province.count),
+        source: 'map_demo_seed',
+        observed_at: new Date(observedBase - (sequence * 60 * 1000)).toISOString(),
+        metadata: {
+          data_label: 'TEST DATA',
+          generated_by: 'Sovereign Eye demo seeder',
+          province: province.province,
+          province_record_count: province.count,
+          demo_record: true
+        }
+      };
+    })
+  ));
+}
+
+export async function loadDemoProvinceTrafficRecords(client, userId) {
+  const existing = await client.from('traffic_records').select('*').eq('source', 'map_demo_seed').limit(250);
+  if (existing.error || existing.data?.length) return existing;
+
+  const rows = buildDemoTrafficRows(userId);
+  return client.from('traffic_records').insert(rows).select('*');
+}
+
+export async function clearDemoProvinceTrafficRecords(client) {
+  return client.from('traffic_records').delete().eq('source', 'map_demo_seed');
 }
 
 function mapAlert(row) {
@@ -243,11 +309,14 @@ function classifySupabaseError(error) {
 function healthForTable(table, data, error, startedAt) {
   const readAt = new Date().toISOString();
   const rowCount = Array.isArray(data) ? data.length : 0;
+  const demoOnly = table === 'traffic_records' && rowCount > 0 && data.every((row) => (
+    row.source === 'map_demo_seed' || row.metadata?.data_label === 'TEST DATA' || row.metadata?.dataLabel === 'TEST DATA'
+  ));
   return {
     table,
     reachable: !error,
     rowCount,
-    source: !error && rowCount > 0 ? 'live' : 'empty',
+    source: !error && rowCount > 0 ? (demoOnly ? 'demo' : 'live') : 'empty',
     errorType: classifySupabaseError(error),
     message: error?.message || '',
     readAt,

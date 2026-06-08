@@ -13,6 +13,7 @@ import { loadPublicConfig } from './lib/runtimeConfig.js';
 import { createSupabaseBrowserClient } from './lib/supabaseClient.js';
 import { getWarrantStatus, isWarrantActive, WARRANT_STATUS } from './lib/warrant.js';
 import {
+  clearDemoProvinceTrafficRecords,
   deleteOrder,
   acknowledgeAlert,
   endUserSession,
@@ -26,6 +27,7 @@ import {
   insertOrder,
   insertTrafficRecord,
   insertUserSession,
+  loadDemoProvinceTrafficRecords,
   loadOperationalData,
   upsertSetting
 } from './lib/supabaseData.js';
@@ -364,6 +366,54 @@ export default function App() {
     }
   }, [currentUser, query, recordAudit, refreshData, requireActiveWarrant, showToast, supabaseClient, t]);
 
+  const loadDemoMapData = useCallback(async () => {
+    if (!await requireActiveWarrant('load map test data')) return;
+    if (!supabaseClient || !currentUser) {
+      showToast(t('toast.supabaseRequired'), 'warn');
+      return;
+    }
+
+    setDataLoading(true);
+    try {
+      const { data, error } = await loadDemoProvinceTrafficRecords(supabaseClient, currentUser.id);
+      if (error) throw error;
+
+      await recordAudit('province test data loaded', `TEST DATA (${data?.length || 0})`);
+      showToast(t('toast.demoDataLoaded'));
+      await refreshData();
+    } catch (error) {
+      const message = error?.message || t('toast.supabaseWriteFailed');
+      showToast(message, 'warn');
+      await recordAudit('province test data load failed', message);
+    } finally {
+      setDataLoading(false);
+    }
+  }, [currentUser, recordAudit, refreshData, requireActiveWarrant, showToast, supabaseClient, t]);
+
+  const clearDemoMapData = useCallback(async () => {
+    if (!await requireActiveWarrant('clear map test data')) return;
+    if (!supabaseClient || !currentUser) {
+      showToast(t('toast.supabaseRequired'), 'warn');
+      return;
+    }
+
+    setDataLoading(true);
+    try {
+      const { error } = await clearDemoProvinceTrafficRecords(supabaseClient);
+      if (error) throw error;
+
+      await recordAudit('province test data cleared', 'TEST DATA');
+      showToast(t('toast.demoDataCleared'));
+      await refreshData();
+    } catch (error) {
+      const message = error?.message || t('toast.supabaseDeleteFailed');
+      showToast(message, 'warn');
+      await recordAudit('province test data clear failed', message);
+    } finally {
+      setDataLoading(false);
+    }
+  }, [currentUser, recordAudit, refreshData, requireActiveWarrant, showToast, supabaseClient, t]);
+
   const logout = useCallback(async () => {
     if (supabaseClient && currentSessionId) {
       await endUserSession(supabaseClient, currentSessionId).catch(() => {});
@@ -595,7 +645,15 @@ export default function App() {
         if (ok) await recordAudit('case created', item.title);
         return ok;
       }} onRemoveCase={(id) => removeOrderBackedItem(id, 'case removed')} />,
-      map: <MapPage points={trafficData} onProvinceSelect={(province) => recordAudit('Province selected', province)} />,
+      map: (
+        <MapPage
+          points={trafficData}
+          dataLoading={dataLoading}
+          onLoadDemoData={loadDemoMapData}
+          onClearDemoData={clearDemoMapData}
+          onProvinceSelect={(province) => recordAudit('Province selected', province)}
+        />
+      ),
       analytics: <Analytics cases={cases} trafficData={trafficData} />,
       network: <NetworkPage trafficData={trafficData} query={commonQuery} />,
       warrants: <Warrants warrants={warrants} onAddWarrantFile={async (file) => {
@@ -738,6 +796,7 @@ export default function App() {
     auditLog,
     behavioralIdentities,
     cases,
+    clearDemoMapData,
     currentUser,
     dashboardStats,
     dataHealth,
@@ -749,6 +808,7 @@ export default function App() {
     identityComparisons,
     identityGraphEdges,
     lang,
+    loadDemoMapData,
     pushAlert,
     query,
     recordAudit,
