@@ -81,7 +81,7 @@ export function NetworkPage({ trafficData, query }) {
               ))}
             </tbody>
           </table>
-          {filtered.length === 0 && <EmptyState title={t('network.noTraffic')} body={t('network.noTrafficBody')} />}
+          {filtered.length === 0 && <EmptyState title={t('common.noLiveRecords')} body={t('network.noTrafficBody')} />}
         </div>
       </Card>
     </div>

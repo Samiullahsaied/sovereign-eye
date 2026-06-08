@@ -63,7 +63,8 @@ export const fa = {
     action: 'عمل',
     detail: 'جزئیات',
     city: 'شهر',
-    country: 'کشور'
+    country: 'کشور',
+    noLiveRecords: 'هنوز رکورد زنده‌ای موجود نیست'
   },
   countries: {
     af: 'افغانستان',
@@ -111,6 +112,8 @@ export const fa = {
     worldMonitoring: 'نظارت جهانی',
     publicCameras: 'کمره‌های عمومی',
     faceTest: 'آزمایش تشخیص چهره',
+    noMappableTraffic: 'هنوز رکورد ترافیکی دارای عرض و طول جغرافیایی از Supabase موجود نیست.',
+    noCameraRecords: 'هنوز رکورد زنده کمره از Supabase موجود نیست.',
     liveAlerts: 'هشدارهای زنده',
     noLiveAlerts: 'در حال حاضر هشدار زنده وجود ندارد.',
     dismiss: 'حذف'
@@ -140,6 +143,31 @@ export const fa = {
   },
   health: {
     title: 'وضعیت سیستم',
+    backendTitle: 'وضعیت داده‌های backend',
+    connected: 'Supabase وصل است',
+    tablesReachable: 'جدول‌های قابل دسترس',
+    lastRead: 'آخرین خواندن موفق',
+    dataSource: 'منبع داده',
+    table: 'جدول',
+    rowsRead: 'ردیف‌های خوانده شده',
+    reachable: 'قابل دسترس',
+    notReachable: 'غیر قابل دسترس',
+    noTableReads: 'هنوز وضعیت خواندن جدول موجود نیست.',
+    noStatusRows: 'هنوز رکورد زنده وضعیت سرویس موجود نیست.',
+    sources: {
+      live: 'زنده',
+      demo: 'دمو',
+      empty: 'خالی'
+    },
+    errors: {
+      supabaseMissing: 'کلید Supabase موجود نیست',
+      supabase_key_missing: 'کلید Supabase موجود نیست',
+      table_missing: 'جدول موجود نیست',
+      rls_denied: 'RLS دسترسی را رد کرد',
+      network_error: 'خطای شبکه',
+      read_error: 'خطای خواندن',
+      network: 'خطای شبکه'
+    },
     rows: {
       auth: 'ورود Supabase',
       configured: 'تنظیم شده',
@@ -182,6 +210,9 @@ export const fa = {
   behavioral: {
     ...ps.behavioral,
     title: 'نقشه هویت رفتاری',
+    live: 'زنده',
+    noLiveIdentities: 'هنوز رکورد هویت رفتاری از Supabase موجود نیست.',
+    noLiveNotes: 'هنوز یادداشت تحلیل هویت از Supabase موجود نیست.',
     generateScore: 'ایجاد نمره شباهت',
     aiExplanation: 'توضیح AI',
     addIdentity: 'افزودن هویت/حساب',

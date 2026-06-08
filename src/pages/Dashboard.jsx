@@ -2,6 +2,7 @@ import { AlertTriangle, Globe2, Hourglass, ShieldAlert, Video } from 'lucide-rea
 import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet';
 import { Card } from '../components/Card.jsx';
 import { AreaChart, DonutChart } from '../components/Charts.jsx';
+import { EmptyState } from '../components/EmptyState.jsx';
 import { useT } from '../i18n/index.jsx';
 
 export function Dashboard({ cases, trafficData, alerts, dataLoading, ipLookup, dashboardStats = [], onDismissAlert, onFaceCheck }) {
@@ -11,7 +12,8 @@ export function Dashboard({ cases, trafficData, alerts, dataLoading, ipLookup, d
   const vpnCount = trafficData.filter((item) => item.vpn).length;
   const criticalCount = cases.filter((item) => item.priority === 'critical' || item.priority === t('common.critical')).length;
   const normalTraffic = trafficData.filter((item) => !item.vpn).length;
-  const foreignTraffic = trafficData.filter((item) => item.country && item.country !== 'Afghanistan' && item.country !== 'افغانستان').length;
+  const foreignTraffic = trafficData.filter((item) => item.country && !['Afghanistan', 'AF'].includes(item.country)).length;
+  const mappableTraffic = trafficData.filter((row) => Array.isArray(row.loc));
   const chartLabels = trafficData.length > 0 ? trafficData.slice(0, 6).map((item) => item.time || item.ip) : [''];
 
   return (
@@ -23,7 +25,7 @@ export function Dashboard({ cases, trafficData, alerts, dataLoading, ipLookup, d
         <Metric icon={<ShieldAlert />} value={vpnCount} label="VPN/Tor" />
         <Metric icon={<Hourglass />} value={dataLoading ? '...' : latencyStat?.label || `${latencyStat?.value ?? 0}ms`} label={t('dashboard.latency')} />
       </section>
-      {trafficData.length === 0 && <div className="notice">{t('dashboard.noTraffic')}</div>}
+      {trafficData.length === 0 && <div className="notice">{t('common.noLiveRecords')}</div>}
       {(ipLookup?.loading || ipLookup?.error || ipLookup?.result) && (
         <Card title={t('dashboard.ipinfoTitle')}>
           {ipLookup.loading && <div className="notice">{t('dashboard.ipinfoLoading')}</div>}
@@ -68,20 +70,16 @@ export function Dashboard({ cases, trafficData, alerts, dataLoading, ipLookup, d
         <Card title={t('dashboard.worldMonitoring')}>
           <MapContainer className="map-container" center={[20, 0]} zoom={1.5} scrollWheelZoom={false}>
             <TileLayer attribution="CartoDB" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-            {trafficData.map((row) => (
+            {mappableTraffic.map((row) => (
               <CircleMarker key={row.id} center={row.loc} radius={8} pathOptions={{ color: '#fff', weight: 1, fillColor: row.vpn ? '#DC2626' : '#059669', fillOpacity: 0.85 }}>
                 <Popup><strong>{row.ip}</strong><br />{row.city}, {row.country}<br />{row.vpn ? 'VPN' : t('common.normal')}</Popup>
               </CircleMarker>
             ))}
           </MapContainer>
+          {mappableTraffic.length === 0 && <EmptyState title={t('common.noLiveRecords')} body={t('dashboard.noMappableTraffic')} />}
         </Card>
         <Card title={t('dashboard.publicCameras')} actions={<button className="btn small" type="button" onClick={onFaceCheck}><Video />{t('dashboard.faceTest')}</button>}>
-          <MapContainer className="map-container" center={[31.6289, 65.7372]} zoom={14} scrollWheelZoom={false}>
-            <TileLayer attribution="CartoDB" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-            <CircleMarker center={[31.6289, 65.7372]} radius={10} pathOptions={{ color: '#fff', fillColor: '#C8A427', fillOpacity: 0.9 }}>
-              <Popup>{t('dashboard.cameraPending')}</Popup>
-            </CircleMarker>
-          </MapContainer>
+          <EmptyState title={t('common.noLiveRecords')} body={t('dashboard.noCameraRecords')} />
         </Card>
       </div>
 

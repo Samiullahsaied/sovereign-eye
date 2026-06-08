@@ -1,4 +1,4 @@
-﻿import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LoginWizard } from './components/LoginWizard.jsx';
 import { Modal } from './components/Modal.jsx';
 import { PageErrorBoundary } from './components/PageErrorBoundary.jsx';
@@ -18,7 +18,11 @@ import {
   endUserSession,
   insertAlert,
   insertAuditLog,
+  insertBehavioralIdentity,
   insertEvidence,
+  insertIdentityAnalysisNote,
+  insertIdentityComparison,
+  insertIdentityGraphEdges,
   insertOrder,
   insertTrafficRecord,
   insertUserSession,
@@ -107,9 +111,22 @@ export default function App() {
   const [sessions, setSessions] = useState([]);
   const [deviceRecords, setDeviceRecords] = useState([]);
   const [typingProfiles, setTypingProfiles] = useState([]);
+  const [behavioralIdentities, setBehavioralIdentities] = useState([]);
+  const [identityComparisons, setIdentityComparisons] = useState([]);
+  const [identityGraphEdges, setIdentityGraphEdges] = useState([]);
+  const [identityAnalysisNotes, setIdentityAnalysisNotes] = useState([]);
+  const [dataHealth, setDataHealth] = useState({
+    connected: false,
+    tablesReachable: 0,
+    tablesTotal: 0,
+    lastSuccessfulReadTime: '',
+    dataSource: 'empty',
+    tables: []
+  });
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [dataLoading, setDataLoading] = useState(false);
   const [expiryLoggedFor, setExpiryLoggedFor] = useState('');
+  const loggedDataFailuresRef = useRef(new Set());
 
   const navItems = useMemo(() => (
     currentUser ? filterPagesForRole(NAV_ITEMS, currentUser.roleSlug) : []
@@ -162,10 +179,22 @@ export default function App() {
   }, []);
 
   const refreshData = useCallback(async () => {
-    if (!supabaseClient || !currentUser) return;
+    if (!currentUser) return;
+    if (!supabaseClient) {
+      setDataHealth({
+        connected: false,
+        tablesReachable: 0,
+        tablesTotal: 0,
+        lastSuccessfulReadTime: '',
+        dataSource: 'empty',
+        tables: [{ table: 'supabase', reachable: false, rowCount: 0, source: 'empty', errorType: 'supabase_key_missing', message: t('health.errors.supabaseMissing') }]
+      });
+      return;
+    }
     setDataLoading(true);
     try {
       const data = await loadOperationalData(supabaseClient);
+      setDataHealth(data.dataHealth);
       setCases(data.cases);
       setWarrants(data.warrants);
       setTargets(data.targets);
@@ -180,10 +209,60 @@ export default function App() {
       setSessions(data.sessions || []);
       setDeviceRecords(data.deviceRecords || []);
       setTypingProfiles(data.typingProfiles || []);
+      setBehavioralIdentities(data.behavioralIdentities || []);
+      setIdentityComparisons(data.identityComparisons || []);
+      setIdentityGraphEdges(data.identityGraphEdges || []);
+      setIdentityAnalysisNotes(data.identityAnalysisNotes || []);
+
+      const failures = data.dataHealth.tables.filter((table) => !table.reachable);
+      if (failures.length > 0) {
+        setAuditLog((items) => {
+          const newRows = failures
+            .filter((failure) => {
+              const key = `${failure.table}:${failure.errorType}`;
+              if (loggedDataFailuresRef.current.has(key)) return false;
+              loggedDataFailuresRef.current.add(key);
+              return true;
+            })
+            .map((failure) => localAuditRow(currentUser, 'data read failure', `${failure.table}: ${failure.errorType}`));
+          if (!loggedDataFailuresRef.current.has('fallback_mode_activated')) {
+            loggedDataFailuresRef.current.add('fallback_mode_activated');
+            newRows.push(localAuditRow(currentUser, 'fallback mode activated', failures.map((failure) => failure.table).join(', ')));
+          }
+          return newRows.length ? [...newRows, ...items].slice(0, 500) : items;
+        });
+
+        await Promise.allSettled(
+          failures
+            .filter((failure) => {
+              const key = `remote:${failure.table}:${failure.errorType}`;
+              if (loggedDataFailuresRef.current.has(key)) return false;
+              loggedDataFailuresRef.current.add(key);
+              return true;
+            })
+            .map((failure) => insertAuditLog(supabaseClient, currentUser.id, 'data read failure', `${failure.table}: ${failure.errorType}`))
+        );
+        if (!loggedDataFailuresRef.current.has('remote:fallback_mode_activated')) {
+          loggedDataFailuresRef.current.add('remote:fallback_mode_activated');
+          await insertAuditLog(supabaseClient, currentUser.id, 'fallback mode activated', failures.map((failure) => failure.table).join(', ')).catch(() => {});
+        }
+      }
+    } catch (error) {
+      const message = error?.message || t('health.errors.network');
+      setDataHealth({
+        connected: false,
+        tablesReachable: 0,
+        tablesTotal: 0,
+        lastSuccessfulReadTime: '',
+        dataSource: 'empty',
+        tables: [{ table: 'supabase', reachable: false, rowCount: 0, source: 'empty', errorType: 'network_error', message }]
+      });
+      setAuditLog((items) => [localAuditRow(currentUser, 'backend connection failure', message), ...items].slice(0, 500));
+      await insertAuditLog(supabaseClient, currentUser.id, 'backend connection failure', message).catch(() => {});
     } finally {
       setDataLoading(false);
     }
-  }, [currentUser, supabaseClient]);
+  }, [currentUser, supabaseClient, t]);
 
   useEffect(() => {
     refreshData();
@@ -308,6 +387,18 @@ export default function App() {
     setSessions([]);
     setDeviceRecords([]);
     setTypingProfiles([]);
+    setBehavioralIdentities([]);
+    setIdentityComparisons([]);
+    setIdentityGraphEdges([]);
+    setIdentityAnalysisNotes([]);
+    setDataHealth({
+      connected: false,
+      tablesReachable: 0,
+      tablesTotal: 0,
+      lastSuccessfulReadTime: '',
+      dataSource: 'empty',
+      tables: []
+    });
     setCurrentSessionId(null);
     setExpiryLoggedFor('');
   }, [currentSessionId, supabaseClient]);
@@ -472,13 +563,7 @@ export default function App() {
     recordAudit('access expired', warrant.number);
   }, [currentUser, expiryLoggedFor, recordAudit, showToast, warrant]);
 
-  const healthRows = useMemo(() => (
-    statusRows.length > 0 ? statusRows : [
-      { id: 'auth', name: t('health.rows.auth'), status: supabaseClient ? t('health.rows.configured') : t('health.rows.missingBackend'), tone: supabaseClient ? 'ok' : 'warn' },
-      { id: 'ipinfo', name: t('health.rows.ipinfo'), status: t('health.rows.backendOnly'), tone: 'ok' },
-      { id: 'tables', name: t('health.rows.tables'), status: dataLoading ? t('common.loading') : t('health.rows.awaitingRows'), tone: dataLoading ? 'gold' : 'warn' }
-    ]
-  ), [dataLoading, statusRows, supabaseClient, t]);
+  const healthRows = useMemo(() => statusRows, [statusRows]);
 
   const page = useMemo(() => {
     const commonQuery = query.trim();
@@ -499,7 +584,7 @@ export default function App() {
             }
           }}
           onFaceCheck={() => {
-            const text = 'Biometric review is available only through an approved secure provider.';
+            const text = t('face.result');
             setFaceResult(text);
             recordAudit('face recognition', text);
           }}
@@ -559,8 +644,62 @@ export default function App() {
         showToast(t('toast.auditCleared'), 'warn');
       }} />,
       users: <UsersPage users={users} />,
-      health: <Health statusRows={healthRows} />,
+      health: <Health statusRows={healthRows} dataHealth={dataHealth} />,
       'behavioral-identity': <BehavioralIdentityGraph
+        identities={behavioralIdentities}
+        comparisons={identityComparisons}
+        graphEdges={identityGraphEdges}
+        notes={identityAnalysisNotes}
+        dataLoading={dataLoading}
+        dataSource={dataHealth.dataSource}
+        onCreateIdentity={async (payload) => {
+          if (!await requireActiveWarrant('create behavioral identity')) return false;
+          if (!supabaseClient || !currentUser) {
+            showToast(t('toast.supabaseRequired'), 'warn');
+            return false;
+          }
+          const { error } = await insertBehavioralIdentity(supabaseClient, currentUser.id, payload);
+          if (error) {
+            showToast(error.message || t('toast.supabaseWriteFailed'), 'warn');
+            return false;
+          }
+          await recordAudit('behavioral identity created', payload.account_name);
+          await refreshData();
+          return true;
+        }}
+        onCreateComparison={async (selectedIdentities, result, edges) => {
+          if (!await requireActiveWarrant('create identity comparison')) return false;
+          if (!supabaseClient || !currentUser) {
+            showToast(t('toast.supabaseRequired'), 'warn');
+            return false;
+          }
+          const { data, error } = await insertIdentityComparison(supabaseClient, currentUser.id, selectedIdentities, result);
+          if (error) {
+            showToast(error.message || t('toast.supabaseWriteFailed'), 'warn');
+            return false;
+          }
+          const edgeResult = await insertIdentityGraphEdges(supabaseClient, data.id, edges);
+          if (edgeResult.error) showToast(edgeResult.error.message || t('toast.supabaseWriteFailed'), 'warn');
+          await recordAudit('similarity score generated', `${result.overall_similarity_score}%`);
+          await refreshData();
+          return data.id;
+        }}
+        onAddAnalysisNote={async (payload) => {
+          if (!await requireActiveWarrant('add behavioral analysis note')) return false;
+          if (!supabaseClient || !currentUser) {
+            showToast(t('toast.supabaseRequired'), 'warn');
+            return false;
+          }
+          const { error } = await insertIdentityAnalysisNote(supabaseClient, currentUser.id, payload);
+          if (error) {
+            showToast(error.message || t('toast.supabaseWriteFailed'), 'warn');
+            return false;
+          }
+          await recordAudit('analyst note added', payload.note);
+          await recordEvidence('behavioral identity analyst note', payload.note);
+          await refreshData();
+          return true;
+        }}
         onAudit={(action, detail) => recordAudit(action, detail)}
         onEvidenceNote={(title, detail) => recordEvidence(title, detail)}
       />,
@@ -571,9 +710,14 @@ export default function App() {
         dashboardStats={dashboardStats}
         dataLoading={dataLoading}
         deviceRecords={deviceRecords}
+        behavioralIdentities={behavioralIdentities}
+        identityComparisons={identityComparisons}
+        identityGraphEdges={identityGraphEdges}
+        identityAnalysisNotes={identityAnalysisNotes}
         evidence={evidence}
         sessions={sessions}
         statusRows={healthRows}
+        dataHealth={dataHealth}
         trafficData={trafficData}
         typingProfiles={typingProfiles}
         users={users}
@@ -592,13 +736,18 @@ export default function App() {
     activePage,
     alerts,
     auditLog,
+    behavioralIdentities,
     cases,
     currentUser,
     dashboardStats,
+    dataHealth,
     dataLoading,
     deviceRecords,
     evidence,
     healthRows,
+    identityAnalysisNotes,
+    identityComparisons,
+    identityGraphEdges,
     lang,
     pushAlert,
     query,
@@ -673,4 +822,5 @@ export default function App() {
     </I18nProvider>
   );
 }
+
 

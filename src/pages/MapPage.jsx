@@ -1,15 +1,24 @@
 import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet';
 import { useState } from 'react';
 import { Card } from '../components/Card.jsx';
+import { EmptyState } from '../components/EmptyState.jsx';
 import { useT } from '../i18n/index.jsx';
-import { PROVINCE_KEYS } from '../data/appConstants.js';
 
 const RISK_COLORS = { high: '#DC2626', medium: '#D97706', normal: '#059669' };
 
 export function MapPage({ points = [], onProvinceSelect }) {
   const t = useT();
-  const provinces = t('map.provinces');
   const [selectedProvince, setSelectedProvince] = useState('');
+  const liveProvinceRows = Object.values(points.reduce((acc, point) => {
+    const name = point.region || point.city || '';
+    if (!name) return acc;
+    const current = acc[name] || { id: name, province: name, count: 0, risk: 'normal' };
+    current.count += 1;
+    if (point.risk === 'high' || point.vpn) current.risk = 'high';
+    else if (point.risk === 'medium' && current.risk !== 'high') current.risk = 'medium';
+    acc[name] = current;
+    return acc;
+  }, {}));
 
   const chooseProvince = (province) => {
     setSelectedProvince(province);
@@ -27,19 +36,20 @@ export function MapPage({ points = [], onProvinceSelect }) {
             </CircleMarker>
           ))}
         </MapContainer>
-        {points.length === 0 && <div className="notice">{t('map.noPoints')}</div>}
+        {points.length === 0 && <div className="notice">{t('common.noLiveRecords')}</div>}
       </Card>
       <Card title={t('map.provinceHeat')}>
-        <div className="heat-grid">
-          {PROVINCE_KEYS.map((key, index) => {
-            const province = provinces[index] || key;
-            return (
-              <button key={key} type="button" className={`heat-cell tone-${index % 3} ${selectedProvince === province ? 'active' : ''}`} onClick={() => chooseProvince(province)}>
-                {province}
+        {liveProvinceRows.length === 0 ? (
+          <EmptyState title={t('common.noLiveRecords')} body={t('map.noProvinceRows')} />
+        ) : (
+          <div className="heat-grid">
+            {liveProvinceRows.map((row) => (
+              <button key={row.id} type="button" className={`heat-cell tone-${row.risk === 'high' ? 0 : row.risk === 'medium' ? 1 : 2} ${selectedProvince === row.province ? 'active' : ''}`} onClick={() => chooseProvince(row.province)}>
+                {row.province} ({row.count})
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
         {selectedProvince && <div className="notice">{t('map.selectedProvince', { province: selectedProvince })}</div>}
       </Card>
     </div>

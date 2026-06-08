@@ -1,8 +1,9 @@
 import { BrainCircuit, Download, Network, Plus, StickyNote } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Card } from '../components/Card.jsx';
+import { EmptyState } from '../components/EmptyState.jsx';
 import { useT } from '../i18n/index.jsx';
-import { SAFE_SAMPLE_IDENTITIES, buildGraphEdges, calculateIdentitySimilarity } from '../lib/behavioralIdentity.js';
+import { buildGraphEdges, calculateIdentitySimilarity } from '../lib/behavioralIdentity.js';
 import { sanitizeText } from '../lib/validation.js';
 
 const EMPTY_IDENTITY = {
@@ -56,6 +57,12 @@ function confidenceText(result, t) {
   return t('behavioral.levels.review');
 }
 
+function dataModeLabel(identity, t) {
+  if (identity.dataMode === 'sample') return t('behavioral.sample');
+  if (identity.dataMode === 'local') return t('behavioral.local');
+  return t('behavioral.live');
+}
+
 function GraphView({ identities, edges, graphLabel, t }) {
   const positions = Object.fromEntries(identities.map((identity, index) => [identity.id, nodePosition(index, identities.length)]));
 
@@ -80,7 +87,7 @@ function GraphView({ identities, edges, graphLabel, t }) {
             <g key={identity.id}>
               <circle className={identity.dataMode === 'sample' ? 'identity-node sample' : 'identity-node'} cx={position.x} cy={position.y} r="34" />
               <text className="identity-node-label" x={position.x} y={position.y - 3}>{identity.account_name}</text>
-              <text className="identity-node-meta" x={position.x} y={position.y + 13}>{identity.platform} · {identity.dataMode === 'sample' ? t('behavioral.sample') : t('behavioral.local')}</text>
+              <text className="identity-node-meta" x={position.x} y={position.y + 13}>{identity.platform} · {dataModeLabel(identity, t)}</text>
             </g>
           );
         })}
@@ -89,19 +96,63 @@ function GraphView({ identities, edges, graphLabel, t }) {
   );
 }
 
-export function BehavioralIdentityGraph({ onAudit, onEvidenceNote }) {
+export function BehavioralIdentityGraph({
+  identities: liveIdentities = [],
+  comparisons = [],
+  graphEdges: liveGraphEdges = [],
+  notes: liveNotes = [],
+  dataLoading = false,
+  onCreateIdentity,
+  onCreateComparison,
+  onAddAnalysisNote,
+  onAudit,
+  onEvidenceNote
+}) {
   const t = useT();
-  const [identities, setIdentities] = useState(SAFE_SAMPLE_IDENTITIES);
-  const [selectedIds, setSelectedIds] = useState(() => SAFE_SAMPLE_IDENTITIES.slice(0, 2).map((item) => item.id));
+  const [localIdentities, setLocalIdentities] = useState([]);
+  const identities = liveIdentities.length > 0 ? liveIdentities : localIdentities;
+  const [selectedIds, setSelectedIds] = useState([]);
   const [form, setForm] = useState(EMPTY_IDENTITY);
   const [note, setNote] = useState('');
-  const [notes, setNotes] = useState([]);
+  const [localNotes, setLocalNotes] = useState([]);
   const [lastResult, setLastResult] = useState(null);
+  const [lastComparisonId, setLastComparisonId] = useState('');
   const [assistantResult, setAssistantResult] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const viewedLogged = useRef(false);
 
+  const notes = liveNotes.length > 0 ? liveNotes : localNotes;
   const selectedIdentities = useMemo(() => identities.filter((identity) => selectedIds.includes(identity.id)), [identities, selectedIds]);
-  const graphEdges = useMemo(() => buildGraphEdges(selectedIdentities), [selectedIdentities]);
+  const graphEdges = useMemo(() => {
+    const selectedSet = new Set(selectedIds);
+    const persisted = liveGraphEdges.filter((edge) => selectedSet.has(edge.source) && selectedSet.has(edge.target));
+    return persisted.length > 0 ? persisted : buildGraphEdges(selectedIdentities);
+  }, [liveGraphEdges, selectedIdentities, selectedIds]);
+
+  useEffect(() => {
+    if (lastResult || comparisons.length === 0) return;
+    const latest = comparisons[0];
+    setLastComparisonId(latest.id);
+    setLastResult({
+      typing_similarity: latest.typing_similarity,
+      writing_style_similarity: latest.writing_style_similarity,
+      activity_time_similarity: latest.activity_time_similarity,
+      device_pattern_similarity: latest.device_pattern_similarity,
+      network_signal_similarity: latest.network_signal_similarity,
+      overall_similarity_score: latest.overall_similarity_score,
+      confidence_label: latest.confidence_label,
+      level: latest.level,
+      reasons: []
+    });
+  }, [comparisons, lastResult]);
+
+  useEffect(() => {
+    setSelectedIds((current) => {
+      const valid = current.filter((id) => identities.some((identity) => identity.id === id));
+      if (valid.length > 0) return valid;
+      return identities.slice(0, 2).map((item) => item.id);
+    });
+  }, [identities]);
 
   useEffect(() => {
     if (viewedLogged.current) return;
@@ -111,7 +162,7 @@ export function BehavioralIdentityGraph({ onAudit, onEvidenceNote }) {
 
   const updateForm = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
-  const addIdentity = (event) => {
+  const addIdentity = async (event) => {
     event.preventDefault();
     if (!form.account_name.trim() || !form.platform.trim() || !form.username.trim()) return;
     const identity = {
@@ -126,29 +177,64 @@ export function BehavioralIdentityGraph({ onAudit, onEvidenceNote }) {
       known_case_id: sanitizeText(form.known_case_id),
       dataMode: 'local'
     };
-    setIdentities((items) => [identity, ...items]);
-    setSelectedIds((items) => [...new Set([identity.id, ...items])].slice(0, 4));
+    setSubmitting(true);
+    try {
+      if (onCreateIdentity) {
+        const ok = await onCreateIdentity(identity);
+        if (!ok) return;
+      } else {
+        setLocalIdentities((items) => [identity, ...items]);
+        setSelectedIds((items) => [...new Set([identity.id, ...items])].slice(0, 4));
+      }
+    } finally {
+      setSubmitting(false);
+    }
     setForm(EMPTY_IDENTITY);
   };
 
   const toggleSelected = (id) => setSelectedIds((items) => (items.includes(id) ? items.filter((item) => item !== id) : [...items, id]));
 
-  const generateScore = () => {
+  const generateScore = async () => {
     const result = calculateIdentitySimilarity(selectedIdentities);
+    const edges = buildGraphEdges(selectedIdentities);
     setLastResult(result);
     setAssistantResult(null);
-    onAudit?.('identity comparison created', `${selectedIdentities.length}`);
-    onAudit?.('similarity score generated', `${result.overall_similarity_score}%`);
+    if (selectedIdentities.length >= 2 && onCreateComparison) {
+      setSubmitting(true);
+      try {
+        const comparisonId = await onCreateComparison(selectedIdentities, result, edges);
+        if (comparisonId) setLastComparisonId(comparisonId);
+      } finally {
+        setSubmitting(false);
+      }
+    } else {
+      onAudit?.('identity comparison created', `${selectedIdentities.length}`);
+      onAudit?.('similarity score generated', `${result.overall_similarity_score}%`);
+    }
   };
 
-  const addNote = () => {
+  const addNote = async () => {
     const clean = sanitizeText(note);
     if (!clean || !lastResult) return;
     const entry = { id: `note-${Date.now()}`, text: clean, score: lastResult.overall_similarity_score, createdAt: new Date().toLocaleString() };
-    setNotes((items) => [entry, ...items]);
+    setSubmitting(true);
+    try {
+      if (onAddAnalysisNote) {
+        const ok = await onAddAnalysisNote({
+          note: clean,
+          comparisonId: lastComparisonId || null,
+          metadata: { score: lastResult.overall_similarity_score }
+        });
+        if (!ok) return;
+      } else {
+        setLocalNotes((items) => [entry, ...items]);
+        onAudit?.('analyst note added', clean);
+        onEvidenceNote?.('behavioral identity analyst note', clean);
+      }
+    } finally {
+      setSubmitting(false);
+    }
     setNote('');
-    onAudit?.('analyst note added', clean);
-    onEvidenceNote?.('behavioral identity analyst note', clean);
   };
 
   const explain = () => {
@@ -185,10 +271,12 @@ export function BehavioralIdentityGraph({ onAudit, onEvidenceNote }) {
         <div className="identity-layout">
           <div>
             <div className="identity-selection">
+              {dataLoading && <div className="notice">{t('common.loading')}</div>}
+              {!dataLoading && identities.length === 0 && <EmptyState title={t('common.noLiveRecords')} body={t('behavioral.noLiveIdentities')} />}
               {identities.map((identity) => (
                 <label key={identity.id} className="identity-option">
                   <input type="checkbox" checked={selectedIds.includes(identity.id)} onChange={() => toggleSelected(identity.id)} />
-                  <span><strong>{identity.account_name}</strong><small>{identity.platform} - @{identity.username} ({identity.dataMode === 'sample' ? t('behavioral.sample') : t('behavioral.local')})</small></span>
+                  <span><strong>{identity.account_name}</strong><small>{identity.platform} - @{identity.username} ({dataModeLabel(identity, t)})</small></span>
                 </label>
               ))}
             </div>
@@ -196,9 +284,9 @@ export function BehavioralIdentityGraph({ onAudit, onEvidenceNote }) {
           <GraphView identities={selectedIdentities} edges={graphEdges} graphLabel={t('behavioral.graphLabel')} t={t} />
         </div>
         <div className="button-row">
-          <button className="btn primary" type="button" onClick={generateScore}>{t('behavioral.generateScore')}</button>
-          <button className="btn" type="button" onClick={explain}><BrainCircuit aria-hidden="true" /> {t('behavioral.aiExplanation')}</button>
-          <button className="btn" type="button" onClick={exportComparison}><Download aria-hidden="true" /> {t('common.export')}</button>
+          <button className="btn primary" type="button" onClick={generateScore} disabled={submitting || selectedIdentities.length < 2}>{t('behavioral.generateScore')}</button>
+          <button className="btn" type="button" onClick={explain} disabled={selectedIdentities.length < 2}><BrainCircuit aria-hidden="true" /> {t('behavioral.aiExplanation')}</button>
+          <button className="btn" type="button" onClick={exportComparison} disabled={selectedIdentities.length === 0}><Download aria-hidden="true" /> {t('common.export')}</button>
         </div>
       </Card>
 
@@ -213,7 +301,7 @@ export function BehavioralIdentityGraph({ onAudit, onEvidenceNote }) {
             <label><span>{t('behavioral.activityTimes')}</span><input value={form.activity_times} onChange={(event) => updateForm('activity_times', event.target.value)} placeholder="08:00, 20:00, 21:00" /></label>
             <label><span>{t('behavioral.languageStyleNotes')}</span><textarea rows={3} value={form.language_style_notes} onChange={(event) => updateForm('language_style_notes', event.target.value)} /></label>
             <label><span>{t('behavioral.knownCaseId')}</span><input value={form.known_case_id} onChange={(event) => updateForm('known_case_id', event.target.value)} /></label>
-            <button className="btn primary" type="submit">{t('behavioral.addAccount')}</button>
+            <button className="btn primary" type="submit" disabled={submitting}>{submitting ? t('common.saving') : t('behavioral.addAccount')}</button>
           </form>
         </Card>
 
@@ -237,8 +325,9 @@ export function BehavioralIdentityGraph({ onAudit, onEvidenceNote }) {
       <div className="grid two">
         <Card title={t('behavioral.evidenceNotes')} icon={<StickyNote aria-hidden="true" />}>
           <label className="full-label"><span>{t('behavioral.analystNote')}</span><textarea rows={4} value={note} onChange={(event) => setNote(event.target.value)} placeholder={t('behavioral.notePlaceholder')} /></label>
-          <button className="btn primary" type="button" onClick={addNote} disabled={!lastResult || !note.trim()}>{t('behavioral.attachNote')}</button>
+          <button className="btn primary" type="button" onClick={addNote} disabled={submitting || !lastResult || !note.trim()}>{t('behavioral.attachNote')}</button>
           <div className="item-list">
+            {notes.length === 0 && <EmptyState title={t('common.noLiveRecords')} body={t('behavioral.noLiveNotes')} />}
             {notes.map((item) => (
               <div className="timeline-item" key={item.id}>
                 <strong>{t('behavioral.estimate', { score: item.score })}</strong>

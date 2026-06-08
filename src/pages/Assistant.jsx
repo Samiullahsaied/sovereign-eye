@@ -25,8 +25,13 @@ export function Assistant({
   sessions = [],
   deviceRecords = [],
   typingProfiles = [],
+  behavioralIdentities = [],
+  identityComparisons = [],
+  identityGraphEdges = [],
+  identityAnalysisNotes = [],
   trafficData = [],
   statusRows = [],
+  dataHealth = null,
   dashboardStats = [],
   users = [],
   dataLoading = false,
@@ -60,9 +65,14 @@ export function Assistant({
     sessions,
     deviceRecords,
     typingProfiles,
+    behavioralIdentities,
+    identityComparisons,
+    identityGraphEdges,
+    identityAnalysisNotes,
     trafficData,
-    statusRows
-  }), [alerts, auditLog, cases, deviceRecords, evidence, sessions, statusRows, trafficData, typingProfiles, warrants]);
+    statusRows,
+    dataHealth: dataHealth?.tables || []
+  }), [alerts, auditLog, behavioralIdentities, cases, dataHealth, deviceRecords, evidence, identityAnalysisNotes, identityComparisons, identityGraphEdges, sessions, statusRows, trafficData, typingProfiles, warrants]);
 
   const recordCount = countRecords(recordGroups);
 
@@ -76,8 +86,13 @@ export function Assistant({
     sessions,
     deviceRecords,
     typingProfiles,
+    behavioralIdentities,
+    identityComparisons,
+    identityGraphEdges,
+    identityAnalysisNotes,
     trafficData,
     statusRows,
+    dataHealth,
     dashboardStats,
     users,
     t

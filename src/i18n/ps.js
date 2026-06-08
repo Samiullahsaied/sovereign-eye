@@ -73,6 +73,7 @@ export const ps = {
     countryCode: 'د هېواد کوډ',
     countryName: 'د هېواد نوم',
     technicalDetails: 'تخنیکي جزئیات',
+    noLiveRecords: 'تر اوسه ژوندۍ ریکارډونه نشته',
     sectionUnavailable: 'برخه موقتاً نشته',
     assistantSafeFailure: 'مرستیال خوندي ډول لوډ نشو. هېڅ عمل نه دی ترسره شوی.',
     sectionSafeFailure: 'دا برخه خوندي ډول لوډ نشوه. هېڅ عمل نه دی ترسره شوی.',
@@ -191,6 +192,8 @@ export const ps = {
     publicCameras: 'عامه کیمرې',
     faceTest: 'د مخ پېژندنې ازمایښت',
     cameraPending: 'خوندي کیمره د اجازه‌لیک په تمه ده',
+    noMappableTraffic: 'تر اوسه له Supabase څخه د عرض البلد او طول البلد لرونکي ترافیکي ریکارډونه نشته.',
+    noCameraRecords: 'تر اوسه له Supabase څخه د ژوندۍ کیمرې ریکارډونه نشته.',
     liveAlerts: 'ژوندۍ خبرتیاوې',
     noLiveAlerts: 'اوس مهال ژوندۍ خبرتیا نشته.',
     dismiss: 'لرې کول'
@@ -211,9 +214,9 @@ export const ps = {
     noSuspect: 'شکمن نه دی ټاکل شوی',
     removeCase: 'قضیه لرې کړه'
   },
-  network: { ...en.network, graph: 'د اړیکو شبکه', noRowsCanvas: 'د شبکې قطار نشته', trafficTable: 'د ترافیک جدول', noTraffic: 'ترافیک نشته', noTrafficBody: 'کله چې Supabase rows وصل شي، معلومات به دلته ښکاره شي.', exportCsv: 'CSV صادرول', headers: { time: 'وخت', country: 'هېواد', city: 'ښار' } },
-  analytics: { ...en.analytics, monthlyOperations: 'میاشتني عملیات', riskLevel: 'د خطر کچه', networkPending: 'د شبکې تحلیل به د منظور backend collectors له ثبت وروسته ښکاره شي.', months: ['حمل', 'ثور', 'جوزا', 'سرطان', 'اسد', 'سنبله', 'میزان', 'عقرب', 'قوس', 'جدي', 'دلو', 'حوت'] },
-  map: { ...en.map, afghanistan: 'د افغانستان نقشه', noPoints: 'ژوندۍ نقشه ټکي لا له Supabase څخه نه دي لوډ شوي.', provinceHeat: 'ولایتي حرارت نقشه', selectedProvince: 'ټاکل شوی ولایت: {{province}}. ژوندۍ خطر جزئیات به د Supabase ولایتي معلوماتو سره ښکاره شي.', provinces: ['کابل', 'کندهار', 'هرات', 'ننګرهار', 'بلخ', 'غزني', 'هلمند', 'کندز', 'پکتیا', 'فراه', 'بدخشان', 'خوست'] },
+  network: { ...en.network, graph: 'د اړیکو شبکه', noRowsCanvas: 'د شبکې قطار نشته', trafficTable: 'د ترافیک جدول', noTraffic: 'ترافیک نشته', noTrafficBody: 'تر اوسه له Supabase څخه ژوندۍ ترافیکي ریکارډونه نشته.', exportCsv: 'CSV صادرول', headers: { time: 'وخت', country: 'هېواد', city: 'ښار' } },
+  analytics: { ...en.analytics, monthlyOperations: 'میاشتني عملیات', riskLevel: 'د خطر کچه', networkPending: 'تر اوسه ژوندۍ ریکارډونه نشته', months: ['حمل', 'ثور', 'جوزا', 'سرطان', 'اسد', 'سنبله', 'میزان', 'عقرب', 'قوس', 'جدي', 'دلو', 'حوت'] },
+  map: { ...en.map, afghanistan: 'د افغانستان نقشه', noPoints: 'تر اوسه ژوندۍ ریکارډونه نشته', provinceHeat: 'ولایتي حرارت نقشه', noProvinceRows: 'تر اوسه له Supabase څخه د ولایت یا سیمې ژوندۍ ریکارډونه نشته.', selectedProvince: 'ټاکل شوی ولایت: {{province}}. ژوندۍ خطر جزئیات به د Supabase ولایتي معلوماتو سره ښکاره شي.', provinces: ['کابل', 'کندهار', 'هرات', 'ننګرهار', 'بلخ', 'غزني', 'هلمند', 'کندز', 'پکتیا', 'فراه', 'بدخشان', 'خوست'] },
   phone: {
     ...en.phone,
     title: 'نړیوال تلیفون تعقیب',
@@ -243,6 +246,31 @@ export const ps = {
   users: { ...en.users, title: 'کاروونکي', notice: 'کاروونکي او رولونه د Supabase Auth profiles او public.roles جدول څخه لوډېږي. پټ نومونه یوازې Supabase Auth اداره کوي.', emptyTitle: 'کاروونکي نشته', emptyBody: 'ثبت شوي حسابونه به د Supabase schema او user_profiles له جوړېدو وروسته دلته ښکاره شي.' },
   health: {
     title: 'سیستم حالت',
+    backendTitle: 'د backend معلوماتو حالت',
+    connected: 'Supabase وصل دی',
+    tablesReachable: 'رسېدلي جدولونه',
+    lastRead: 'وروستی بریالی لوستل',
+    dataSource: 'د معلوماتو سرچینه',
+    table: 'جدول',
+    rowsRead: 'لوستل شوي قطارونه',
+    reachable: 'رسېدلی',
+    notReachable: 'نه رسېږي',
+    noTableReads: 'تر اوسه د جدول لوستلو حالت نشته.',
+    noStatusRows: 'تر اوسه ژوندۍ د خدمت حالت ریکارډونه نشته.',
+    sources: {
+      live: 'ژوندی',
+      demo: 'ډیمو',
+      empty: 'تش'
+    },
+    errors: {
+      supabaseMissing: 'د Supabase کیلي نشته',
+      supabase_key_missing: 'د Supabase کیلي نشته',
+      table_missing: 'جدول نشته',
+      rls_denied: 'RLS لاسرسی رد کړ',
+      network_error: 'د شبکې ستونزه',
+      read_error: 'د لوستلو ستونزه',
+      network: 'د شبکې ستونزه'
+    },
     rows: {
       auth: 'Supabase ننوتل',
       configured: 'تنظیم شوی',
@@ -304,6 +332,9 @@ export const ps = {
     graphLabel: 'د رفتاري هویت ورته‌والي ګراف',
     sample: 'نمونه',
     local: 'محلي',
+    live: 'ژوندی',
+    noLiveIdentities: 'تر اوسه له Supabase څخه د رفتاري هویت ریکارډونه نشته.',
+    noLiveNotes: 'تر اوسه له Supabase څخه د هویت تحلیلي یادښتونه نشته.',
     generateScore: 'د ورته‌والي نمره جوړول',
     aiExplanation: 'AI تشریح',
     addIdentity: 'هویت/حساب اضافه کړئ',

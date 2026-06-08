@@ -73,6 +73,7 @@ export const en = {
     countryCode: 'Country code',
     countryName: 'Country name',
     technicalDetails: 'Technical details',
+    noLiveRecords: 'No live records available yet',
     sectionUnavailable: 'Section temporarily unavailable',
     assistantSafeFailure: 'The assistant could not load safely. No action was performed.',
     sectionSafeFailure: 'This section could not load safely. No action was performed.',
@@ -179,7 +180,7 @@ export const en = {
     activeCases: 'Active cases',
     countries: 'Countries',
     latency: 'Latency',
-    noTraffic: 'Live network rows are not loaded yet. When the approved backend writes traffic records, this dashboard will update from Supabase-backed data.',
+    noTraffic: 'No live records available yet',
     ipinfoTitle: 'IPinfo lookup',
     ipinfoLoading: 'Looking up IP address through the secure backend endpoint...',
     unknownCity: 'Unknown city',
@@ -197,6 +198,8 @@ export const en = {
     publicCameras: 'Public cameras',
     faceTest: 'Face recognition test',
     cameraPending: 'Secure camera feed pending authorization',
+    noMappableTraffic: 'No traffic records with latitude and longitude are available from Supabase yet.',
+    noCameraRecords: 'No live camera records are available from Supabase yet.',
     liveAlerts: 'Live alerts',
     noLiveAlerts: 'No live alerts at this time.',
     dismiss: 'Dismiss'
@@ -222,20 +225,21 @@ export const en = {
     noRowsCanvas: 'No network rows loaded',
     trafficTable: 'Traffic table',
     noTraffic: 'No traffic',
-    noTrafficBody: 'When Supabase rows are connected, data will appear here.',
+    noTrafficBody: 'No live traffic records are available from Supabase yet.',
     exportCsv: 'Export CSV',
     headers: { time: 'Time', country: 'Country', city: 'City' }
   },
   analytics: {
     monthlyOperations: 'Monthly operations',
     riskLevel: 'Risk level',
-    networkPending: 'Network analytics will appear after approved backend collectors write live rows.',
+    networkPending: 'No live records available yet',
     months: ['Hamal', 'Sawr', 'Jawza', 'Saratan', 'Asad', 'Sonbola', 'Mizan', 'Aqrab', 'Qaws', 'Jadi', 'Dalwa', 'Hoot']
   },
   map: {
     afghanistan: 'Afghanistan map',
-    noPoints: 'No live map points are loaded from Supabase yet.',
+    noPoints: 'No live records available yet',
     provinceHeat: 'Province heat map',
+    noProvinceRows: 'No live province or region records are available from Supabase yet.',
     selectedProvince: 'Selected province: {{province}}. Live risk details will appear when Supabase status rows include province-level data.',
     provinces: ['Kabul', 'Kandahar', 'Herat', 'Nangarhar', 'Balkh', 'Ghazni', 'Helmand', 'Kunduz', 'Paktia', 'Farah', 'Badakhshan', 'Khost']
   },
@@ -317,6 +321,31 @@ export const en = {
   },
   health: {
     title: 'System status',
+    backendTitle: 'Backend data health',
+    connected: 'Supabase connected',
+    tablesReachable: 'Tables reachable',
+    lastRead: 'Last successful read',
+    dataSource: 'Data source',
+    table: 'Table',
+    rowsRead: 'Rows read',
+    reachable: 'Reachable',
+    notReachable: 'Not reachable',
+    noTableReads: 'No table read status is available yet.',
+    noStatusRows: 'No live service status records are available yet.',
+    sources: {
+      live: 'live',
+      demo: 'demo',
+      empty: 'empty'
+    },
+    errors: {
+      supabaseMissing: 'Supabase key missing',
+      supabase_key_missing: 'Supabase key missing',
+      table_missing: 'Table missing',
+      rls_denied: 'RLS denied',
+      network_error: 'Network error',
+      read_error: 'Read error',
+      network: 'Network error'
+    },
     rows: {
       auth: 'Supabase Auth',
       configured: 'Configured',
@@ -397,6 +426,9 @@ export const en = {
     graphLabel: 'Behavioral identity similarity graph',
     sample: 'sample',
     local: 'local',
+    live: 'live',
+    noLiveIdentities: 'No behavioral identity records are available from Supabase yet.',
+    noLiveNotes: 'No identity analysis notes are available from Supabase yet.',
     generateScore: 'Generate similarity score',
     aiExplanation: 'AI explanation',
     addIdentity: 'Add identity/account',

@@ -64,7 +64,8 @@ export const ar = {
     action: 'الإجراء',
     detail: 'التفاصيل',
     city: 'المدينة',
-    country: 'الدولة'
+    country: 'الدولة',
+    noLiveRecords: 'لا توجد سجلات حية بعد'
   },
   countries: {
     af: 'أفغانستان',
@@ -112,6 +113,8 @@ export const ar = {
     worldMonitoring: 'المراقبة العالمية',
     publicCameras: 'الكاميرات العامة',
     faceTest: 'اختبار التعرف على الوجه',
+    noMappableTraffic: 'لا توجد سجلات حركة تحتوي على خطوط الطول والعرض من Supabase بعد.',
+    noCameraRecords: 'لا توجد سجلات كاميرا حية من Supabase بعد.',
     liveAlerts: 'التنبيهات الحية',
     noLiveAlerts: 'لا توجد تنبيهات حية الآن.',
     dismiss: 'إزالة'
@@ -141,6 +144,31 @@ export const ar = {
   },
   health: {
     title: 'حالة النظام',
+    backendTitle: 'صحة بيانات backend',
+    connected: 'Supabase متصل',
+    tablesReachable: 'الجداول المتاحة',
+    lastRead: 'آخر قراءة ناجحة',
+    dataSource: 'مصدر البيانات',
+    table: 'الجدول',
+    rowsRead: 'الصفوف المقروءة',
+    reachable: 'متاح',
+    notReachable: 'غير متاح',
+    noTableReads: 'لا توجد حالة قراءة للجداول بعد.',
+    noStatusRows: 'لا توجد سجلات حالة خدمة حية بعد.',
+    sources: {
+      live: 'حي',
+      demo: 'تجريبي',
+      empty: 'فارغ'
+    },
+    errors: {
+      supabaseMissing: 'مفتاح Supabase مفقود',
+      supabase_key_missing: 'مفتاح Supabase مفقود',
+      table_missing: 'الجدول مفقود',
+      rls_denied: 'رفض RLS الوصول',
+      network_error: 'خطأ في الشبكة',
+      read_error: 'خطأ في القراءة',
+      network: 'خطأ في الشبكة'
+    },
     rows: {
       auth: 'تسجيل Supabase',
       configured: 'مُعد',
@@ -183,6 +211,9 @@ export const ar = {
   behavioral: {
     ...fa.behavioral,
     title: 'خريطة الهوية السلوكية',
+    live: 'حي',
+    noLiveIdentities: 'لا توجد سجلات هوية سلوكية من Supabase بعد.',
+    noLiveNotes: 'لا توجد ملاحظات تحليل هوية من Supabase بعد.',
     generateScore: 'إنشاء درجة التشابه',
     aiExplanation: 'شرح AI',
     addIdentity: 'إضافة هوية/حساب',

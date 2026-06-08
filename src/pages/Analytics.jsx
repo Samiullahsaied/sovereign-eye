@@ -26,7 +26,7 @@ export function Analytics({ cases, trafficData }) {
           { label: t('common.medium'), value: Math.round((medium / total) * 100), color: '#D97706' },
           { label: t('common.low'), value: Math.round((low / total) * 100), color: '#059669' }
         ]} />
-        {trafficData.length === 0 && <div className="notice">{t('analytics.networkPending')}</div>}
+        {trafficData.length === 0 && <div className="notice">{t('common.noLiveRecords')}</div>}
       </Card>
     </div>
   );
