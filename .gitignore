@@ -17,3 +17,9 @@ rad.json
 *.bclicense
 *.flf
 TestResults.xml
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example

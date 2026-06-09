@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5188",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1 --port 4188",
+    "preview": "npm run build && wrangler dev",
     "start": "node server/index.js",
     "test": "vitest run",
     "check:i18n": "node scripts/check-i18n.js",
-    "check": "npm run check:i18n && npm run test && npm run build"
+    "check": "npm run check:i18n && npm run test && npm run build",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.107.0",
@@ -23,10 +24,12 @@
     "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.40.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "jsdom": "^25.0.1",
     "vite": "^8.0.16",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.8",
+    "wrangler": "^4.99.0"
   }
 }
