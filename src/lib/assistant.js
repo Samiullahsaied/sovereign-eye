@@ -57,6 +57,7 @@ function buildContext(context = {}) {
   const trafficData = asArray(context.trafficData);
   const statusRows = asArray(context.statusRows);
   const dashboardStats = asArray(context.dashboardStats);
+  const approvalRequests = asArray(context.approvalRequests);
   const users = asArray(context.users);
   const warrantStatus = getWarrantStatus(context.warrant);
 
@@ -78,6 +79,7 @@ function buildContext(context = {}) {
     trafficData,
     statusRows,
     dashboardStats,
+    approvalRequests,
     users,
     warrantStatus,
     highRiskAlerts,
@@ -87,6 +89,7 @@ function buildContext(context = {}) {
     activeSessions,
     totalRecords: cases.length + warrants.length + auditLog.length + evidence.length + alerts.length
       + sessions.length + deviceRecords.length + typingProfiles.length + trafficData.length + statusRows.length
+      + approvalRequests.length
   };
 }
 
@@ -133,6 +136,7 @@ function evidenceSources(ctx) {
     source('Device records', ctx.deviceRecords.length, ctx.deviceRecords.map((item) => item.id)),
     source('Typing profile records', ctx.typingProfiles.length, ctx.typingProfiles.map((item) => item.id)),
     source('Traffic records', ctx.trafficData.length, ctx.trafficData.map((item) => item.id)),
+    source('Approval request records', ctx.approvalRequests.length, ctx.approvalRequests.map((item) => item.id)),
     source('System status records', ctx.statusRows.length, ctx.statusRows.map((item) => item.id))
   ].filter((item) => item.count > 0);
 }

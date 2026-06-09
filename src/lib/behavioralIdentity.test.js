@@ -1,16 +1,51 @@
 import { describe, expect, it } from 'vitest';
 import {
   IDENTITY_WARNING,
-  SAFE_SAMPLE_IDENTITIES,
   buildGraphEdges,
   calculateIdentitySimilarity,
   createAssistantExplanation,
   similarityLevel
 } from './behavioralIdentity.js';
 
+const TEST_IDENTITIES = [
+  {
+    id: 'identity-a',
+    account_name: 'Account Alpha',
+    platform: 'Internal Source',
+    username: 'alpha',
+    device_hint: 'Android browser',
+    typing_profile_id: 'typing-01',
+    activity_times: '20:00,21:00,22:00',
+    language_style_notes: 'Short operational phrases, formal Pashto, repeated time references.',
+    known_case_id: 'CASE-001'
+  },
+  {
+    id: 'identity-b',
+    account_name: 'Account Bravo',
+    platform: 'Internal Source',
+    username: 'bravo',
+    device_hint: 'Android browser',
+    typing_profile_id: 'typing-02',
+    activity_times: '20:30,21:15,23:00',
+    language_style_notes: 'Formal Pashto wording, short sentences, repeated time references.',
+    known_case_id: 'CASE-001'
+  },
+  {
+    id: 'identity-c',
+    account_name: 'Account Charlie',
+    platform: 'Internal Source',
+    username: 'charlie',
+    device_hint: 'Desktop browser',
+    typing_profile_id: 'typing-03',
+    activity_times: '08:00,13:00,18:00',
+    language_style_notes: 'Longer mixed-language notes and less frequent time references.',
+    known_case_id: 'CASE-002'
+  }
+];
+
 describe('behavioral identity analysis', () => {
   it('calculates non-decisive similarity scores for two or more identities', () => {
-    const result = calculateIdentitySimilarity(SAFE_SAMPLE_IDENTITIES.slice(0, 2));
+    const result = calculateIdentitySimilarity(TEST_IDENTITIES.slice(0, 2));
 
     expect(result.overall_similarity_score).toBeGreaterThan(0);
     expect(result.level).toMatch(/similarity|review/i);
@@ -32,7 +67,7 @@ describe('behavioral identity analysis', () => {
   });
 
   it('builds graph edges with percentage labels', () => {
-    const edges = buildGraphEdges(SAFE_SAMPLE_IDENTITIES);
+    const edges = buildGraphEdges(TEST_IDENTITIES);
 
     expect(edges).toHaveLength(3);
     expect(edges[0]).toMatchObject({
@@ -44,7 +79,7 @@ describe('behavioral identity analysis', () => {
   });
 
   it('keeps assistant output analytical and requires human review', () => {
-    const result = calculateIdentitySimilarity(SAFE_SAMPLE_IDENTITIES.slice(0, 2));
+    const result = calculateIdentitySimilarity(TEST_IDENTITIES.slice(0, 2));
     const explanation = createAssistantExplanation(result);
     const visibleText = [
       IDENTITY_WARNING,

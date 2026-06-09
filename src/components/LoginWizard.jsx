@@ -286,7 +286,7 @@ export function LoginWizard({ supabaseClient, configLoading, configError, lang =
         {step === 2 && (
           <form onSubmit={submitWarrant} className="form-grid">
             <div className="notice">{pendingUser?.name} - {pendingUser?.roleLabel}</div>
-            <label><span>{t('warrant.number')}</span><input value={warrant.warrantNumber} onChange={(event) => updateWarrant('warrantNumber', event.target.value)} placeholder="W-2026-001" disabled={submitting} required /></label>
+            <label><span>{t('warrant.number')}</span><input value={warrant.warrantNumber} onChange={(event) => updateWarrant('warrantNumber', event.target.value)} placeholder={t('warrant.numberPlaceholder')} disabled={submitting} required /></label>
             <label>
               <span>{t('warrant.file')}</span>
               <input

@@ -26,7 +26,7 @@ describe('PhonePage Numverify result card', () => {
       </I18nProvider>
     );
 
-    fireEvent.change(screen.getByPlaceholderText('+93 700 000 000'), { target: { value: '+14158586273' } });
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '+14158586273' } });
     fireEvent.click(screen.getByRole('button', { name: /طبقه بندي/i }));
 
     await waitFor(() => expect(screen.getByText('د امریکا متحده ایالات')).toBeInTheDocument());

@@ -33,6 +33,7 @@ export function Assistant({
   statusRows = [],
   dataHealth = null,
   dashboardStats = [],
+  approvalRequests = [],
   users = [],
   dataLoading = false,
   onApprovalRequest
@@ -71,8 +72,9 @@ export function Assistant({
     identityAnalysisNotes,
     trafficData,
     statusRows,
+    approvalRequests,
     dataHealth: dataHealth?.tables || []
-  }), [alerts, auditLog, behavioralIdentities, cases, dataHealth, deviceRecords, evidence, identityAnalysisNotes, identityComparisons, identityGraphEdges, sessions, statusRows, trafficData, typingProfiles, warrants]);
+  }), [alerts, approvalRequests, auditLog, behavioralIdentities, cases, dataHealth, deviceRecords, evidence, identityAnalysisNotes, identityComparisons, identityGraphEdges, sessions, statusRows, trafficData, typingProfiles, warrants]);
 
   const recordCount = countRecords(recordGroups);
 
@@ -94,6 +96,7 @@ export function Assistant({
     statusRows,
     dataHealth,
     dashboardStats,
+    approvalRequests,
     users,
     t
   };
@@ -126,10 +129,10 @@ export function Assistant({
     }
   };
 
-  const requestApproval = () => {
+  const requestApproval = async () => {
     if (!result) return;
-    setApprovalRequested(true);
-    onApprovalRequest?.(result);
+    const ok = await onApprovalRequest?.(result);
+    setApprovalRequested(Boolean(ok));
   };
 
   return (

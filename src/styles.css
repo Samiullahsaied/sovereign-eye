@@ -128,7 +128,6 @@ body[dir=ltr] .main-content{margin-left:235px;margin-right:0}
 .identity-edge.warn{stroke:var(--warn)}.identity-edge.danger{stroke:var(--red)}.identity-edge.gold{stroke:var(--gold)}
 .identity-edge-label{fill:var(--text);font-family:var(--mono);font-size:13px;font-weight:800;text-anchor:middle;paint-order:stroke;stroke:var(--panel);stroke-width:5px}
 .identity-node{fill:var(--panel-3);stroke:var(--gold);stroke-width:2}
-.identity-node.sample{stroke:var(--blue)}
 .identity-node-label{fill:var(--text);font-size:11px;font-weight:900;text-anchor:middle;paint-order:stroke;stroke:var(--panel);stroke-width:4px}
 .identity-node-meta{fill:var(--muted);font-size:9px;text-anchor:middle;paint-order:stroke;stroke:var(--panel);stroke-width:4px}
 .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:8px}

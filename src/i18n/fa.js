@@ -123,6 +123,7 @@ export const fa = {
     ...ps.warrant,
     pageTitle: 'احکام قانونی',
     number: 'شماره حکم',
+    numberPlaceholder: 'شماره رسمی حکم',
     file: 'فایل حکم محکمه',
     duration: 'مدت دسترسی',
     start: 'زمان شروع دسترسی',
@@ -148,12 +149,22 @@ export const fa = {
     provinceHeat: 'نقشه حرارتی ولایت‌ها',
     noProvinceRows: 'هنوز رکورد زنده ولایت یا منطقه از Supabase موجود نیست.',
     selectedProvince: 'ولایت انتخاب‌شده: {{province}}. جزئیات خطر زنده وقتی داده‌های ولایتی Supabase موجود باشد نمایش داده می‌شود.',
-    loadDemoData: 'بارگذاری داده‌های نمایشی',
-    clearDemoData: 'پاک کردن داده‌های نمایشی',
-    testDataLabel: 'TEST DATA',
-    demoDataNotice: 'داده‌های TEST DATA از Supabase نمایش داده می‌شود، چون رکورد واقعی ولایتی موجود نیست.',
-    realDataOverridesDemo: 'رکوردهای واقعی Supabase موجود است، بنابراین رکوردهای نمایشی پنهان شده‌اند.',
     provinces: ['کابل', 'قندهار', 'هرات', 'ننگرهار', 'بلخ', 'غزنی', 'هلمند', 'کندز', 'پکتیا', 'فراه', 'بدخشان', 'خوست']
+  },
+  phone: {
+    ...ps.phone,
+    title: 'پیگیری تلفن بین‌المللی',
+    number: 'شماره',
+    numberPlaceholder: 'شماره تلفن بین‌المللی',
+    classify: 'طبقه‌بندی',
+    checking: 'در حال بررسی...',
+    internationalFormat: 'قالب بین‌المللی',
+    localFormat: 'قالب محلی',
+    carrier: 'شرکت مخابراتی',
+    lineType: 'نوع خط',
+    validity: 'اعتبار',
+    location: 'موقعیت',
+    noLocation: 'اطلاعات موقعیت برای این شماره توسط Numverify API ارائه نمی‌شود.'
   },
   health: {
     title: 'وضعیت سیستم',
@@ -170,7 +181,6 @@ export const fa = {
     noStatusRows: 'هنوز رکورد زنده وضعیت سرویس موجود نیست.',
     sources: {
       live: 'زنده',
-      demo: 'دمو',
       empty: 'خالی'
     },
     errors: {
@@ -235,6 +245,7 @@ export const fa = {
     username: 'نام کاربری',
     deviceHint: 'نشانه وسیله',
     activityTimes: 'زمان‌های فعالیت',
+    activityTimesPlaceholder: 'یادداشت زمان‌های فعالیت مجاز',
     languageStyleNotes: 'یادداشت‌های سبک زبانی',
     addAccount: 'افزودن حساب',
     similarityResult: 'نتیجه شباهت',
@@ -244,9 +255,4 @@ export const fa = {
     analystNote: 'یادداشت تحلیلگر',
     attachNote: 'پیوست یادداشت'
   },
-  toast: {
-    ...ps.toast,
-    demoDataLoaded: 'رکوردهای نمایشی نقشه در Supabase بارگذاری شد.',
-    demoDataCleared: 'رکوردهای نمایشی نقشه از Supabase پاک شد.'
-  }
 };

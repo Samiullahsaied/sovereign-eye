@@ -44,7 +44,12 @@ describe('Supabase operational data mapper', () => {
       dashboard_stats: queryResult([]),
       user_sessions: queryResult([]),
       device_records: queryResult([]),
-      typing_profiles: queryResult([])
+      typing_profiles: queryResult([]),
+      behavioral_identities: queryResult([]),
+      identity_comparisons: queryResult([]),
+      identity_graph_edges: queryResult([]),
+      identity_analysis_notes: queryResult([]),
+      approval_requests: queryResult([])
     };
 
     const client = {
@@ -68,7 +73,7 @@ describe('Supabase operational data mapper', () => {
     expect(data.typingProfiles).toEqual([]);
   });
 
-  it('classifies seeded map traffic rows as demo data', async () => {
+  it('filters seeded map traffic rows out of production data', async () => {
     const tables = {
       orders: queryResult([]),
       audit_logs: queryResult([]),
@@ -100,7 +105,12 @@ describe('Supabase operational data mapper', () => {
       dashboard_stats: queryResult([]),
       user_sessions: queryResult([]),
       device_records: queryResult([]),
-      typing_profiles: queryResult([])
+      typing_profiles: queryResult([]),
+      behavioral_identities: queryResult([]),
+      identity_comparisons: queryResult([]),
+      identity_graph_edges: queryResult([]),
+      identity_analysis_notes: queryResult([]),
+      approval_requests: queryResult([])
     };
 
     const client = {
@@ -110,8 +120,8 @@ describe('Supabase operational data mapper', () => {
     const data = await loadOperationalData(client);
     const trafficHealth = data.dataHealth.tables.find((item) => item.table === 'traffic_records');
 
-    expect(data.trafficRecords[0].isTestData).toBe(true);
-    expect(data.trafficRecords[0].dataLabel).toBe('TEST DATA');
-    expect(trafficHealth.source).toBe('demo');
+    expect(data.trafficRecords).toEqual([]);
+    expect(trafficHealth.rowCount).toBe(0);
+    expect(trafficHealth.source).toBe('empty');
   });
 });

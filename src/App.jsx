@@ -13,11 +13,11 @@ import { loadPublicConfig } from './lib/runtimeConfig.js';
 import { createSupabaseBrowserClient } from './lib/supabaseClient.js';
 import { getWarrantStatus, isWarrantActive, WARRANT_STATUS } from './lib/warrant.js';
 import {
-  clearDemoProvinceTrafficRecords,
   deleteOrder,
   acknowledgeAlert,
   endUserSession,
   insertAlert,
+  insertApprovalRequest,
   insertAuditLog,
   insertBehavioralIdentity,
   insertEvidence,
@@ -27,7 +27,6 @@ import {
   insertOrder,
   insertTrafficRecord,
   insertUserSession,
-  loadDemoProvinceTrafficRecords,
   loadOperationalData,
   upsertSetting
 } from './lib/supabaseData.js';
@@ -117,6 +116,7 @@ export default function App() {
   const [identityComparisons, setIdentityComparisons] = useState([]);
   const [identityGraphEdges, setIdentityGraphEdges] = useState([]);
   const [identityAnalysisNotes, setIdentityAnalysisNotes] = useState([]);
+  const [approvalRequests, setApprovalRequests] = useState([]);
   const [dataHealth, setDataHealth] = useState({
     connected: false,
     tablesReachable: 0,
@@ -215,6 +215,7 @@ export default function App() {
       setIdentityComparisons(data.identityComparisons || []);
       setIdentityGraphEdges(data.identityGraphEdges || []);
       setIdentityAnalysisNotes(data.identityAnalysisNotes || []);
+      setApprovalRequests(data.approvalRequests || []);
 
       const failures = data.dataHealth.tables.filter((table) => !table.reachable);
       if (failures.length > 0) {
@@ -366,54 +367,6 @@ export default function App() {
     }
   }, [currentUser, query, recordAudit, refreshData, requireActiveWarrant, showToast, supabaseClient, t]);
 
-  const loadDemoMapData = useCallback(async () => {
-    if (!await requireActiveWarrant('load map test data')) return;
-    if (!supabaseClient || !currentUser) {
-      showToast(t('toast.supabaseRequired'), 'warn');
-      return;
-    }
-
-    setDataLoading(true);
-    try {
-      const { data, error } = await loadDemoProvinceTrafficRecords(supabaseClient, currentUser.id);
-      if (error) throw error;
-
-      await recordAudit('province test data loaded', `TEST DATA (${data?.length || 0})`);
-      showToast(t('toast.demoDataLoaded'));
-      await refreshData();
-    } catch (error) {
-      const message = error?.message || t('toast.supabaseWriteFailed');
-      showToast(message, 'warn');
-      await recordAudit('province test data load failed', message);
-    } finally {
-      setDataLoading(false);
-    }
-  }, [currentUser, recordAudit, refreshData, requireActiveWarrant, showToast, supabaseClient, t]);
-
-  const clearDemoMapData = useCallback(async () => {
-    if (!await requireActiveWarrant('clear map test data')) return;
-    if (!supabaseClient || !currentUser) {
-      showToast(t('toast.supabaseRequired'), 'warn');
-      return;
-    }
-
-    setDataLoading(true);
-    try {
-      const { error } = await clearDemoProvinceTrafficRecords(supabaseClient);
-      if (error) throw error;
-
-      await recordAudit('province test data cleared', 'TEST DATA');
-      showToast(t('toast.demoDataCleared'));
-      await refreshData();
-    } catch (error) {
-      const message = error?.message || t('toast.supabaseDeleteFailed');
-      showToast(message, 'warn');
-      await recordAudit('province test data clear failed', message);
-    } finally {
-      setDataLoading(false);
-    }
-  }, [currentUser, recordAudit, refreshData, requireActiveWarrant, showToast, supabaseClient, t]);
-
   const logout = useCallback(async () => {
     if (supabaseClient && currentSessionId) {
       await endUserSession(supabaseClient, currentSessionId).catch(() => {});
@@ -441,6 +394,7 @@ export default function App() {
     setIdentityComparisons([]);
     setIdentityGraphEdges([]);
     setIdentityAnalysisNotes([]);
+    setApprovalRequests([]);
     setDataHealth({
       connected: false,
       tablesReachable: 0,
@@ -615,6 +569,26 @@ export default function App() {
 
   const healthRows = useMemo(() => statusRows, [statusRows]);
 
+  const requestAssistantApproval = useCallback(async (result) => {
+    if (!await requireActiveWarrant('request assistant approval')) return false;
+    if (!supabaseClient || !currentUser) {
+      showToast(t('toast.supabaseRequired'), 'warn');
+      return false;
+    }
+
+    const { error } = await insertApprovalRequest(supabaseClient, currentUser.id, result);
+    if (error) {
+      showToast(error.message || t('toast.supabaseWriteFailed'), 'warn');
+      await recordAudit('AI approval request failed', error.message || result.action);
+      return false;
+    }
+
+    await recordAudit('AI approval requested', `${result.action} - ${result.riskAssessment?.level || 'review'}`);
+    showToast(t('assistant.approvalRecorded'));
+    await refreshData();
+    return true;
+  }, [currentUser, recordAudit, refreshData, requireActiveWarrant, showToast, supabaseClient, t]);
+
   const page = useMemo(() => {
     const commonQuery = query.trim();
     const pages = {
@@ -649,8 +623,6 @@ export default function App() {
         <MapPage
           points={trafficData}
           dataLoading={dataLoading}
-          onLoadDemoData={loadDemoMapData}
-          onClearDemoData={clearDemoMapData}
           onProvinceSelect={(province) => recordAudit('Province selected', province)}
         />
       ),
@@ -766,6 +738,7 @@ export default function App() {
         auditLog={auditLog}
         cases={cases}
         dashboardStats={dashboardStats}
+        approvalRequests={approvalRequests}
         dataLoading={dataLoading}
         deviceRecords={deviceRecords}
         behavioralIdentities={behavioralIdentities}
@@ -781,7 +754,7 @@ export default function App() {
         users={users}
         warrant={warrant}
         warrants={warrants}
-        onApprovalRequest={(result) => recordAudit('AI approval requested', `${result.action} - ${result.riskAssessment?.level || 'review'}`)}
+        onApprovalRequest={requestAssistantApproval}
       />,
       settings: <SettingsPage lang={lang} theme={theme} settingsRows={settingsRows} onLangChange={changeLang} onThemeChange={changeTheme} onReset={() => {
         clearAppStorage();
@@ -794,9 +767,9 @@ export default function App() {
     activePage,
     alerts,
     auditLog,
+    approvalRequests,
     behavioralIdentities,
     cases,
-    clearDemoMapData,
     currentUser,
     dashboardStats,
     dataHealth,
@@ -808,12 +781,12 @@ export default function App() {
     identityComparisons,
     identityGraphEdges,
     lang,
-    loadDemoMapData,
     pushAlert,
     query,
     recordAudit,
     recordEvidence,
     refreshData,
+    requestAssistantApproval,
     requireActiveWarrant,
     settingsRows,
     sessions,

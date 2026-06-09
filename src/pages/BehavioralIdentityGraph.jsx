@@ -58,8 +58,6 @@ function confidenceText(result, t) {
 }
 
 function dataModeLabel(identity, t) {
-  if (identity.dataMode === 'sample') return t('behavioral.sample');
-  if (identity.dataMode === 'local') return t('behavioral.local');
   return t('behavioral.live');
 }
 
@@ -85,7 +83,7 @@ function GraphView({ identities, edges, graphLabel, t }) {
           const position = positions[identity.id];
           return (
             <g key={identity.id}>
-              <circle className={identity.dataMode === 'sample' ? 'identity-node sample' : 'identity-node'} cx={position.x} cy={position.y} r="34" />
+              <circle className="identity-node" cx={position.x} cy={position.y} r="34" />
               <text className="identity-node-label" x={position.x} y={position.y - 3}>{identity.account_name}</text>
               <text className="identity-node-meta" x={position.x} y={position.y + 13}>{identity.platform} · {dataModeLabel(identity, t)}</text>
             </g>
@@ -105,23 +103,20 @@ export function BehavioralIdentityGraph({
   onCreateIdentity,
   onCreateComparison,
   onAddAnalysisNote,
-  onAudit,
-  onEvidenceNote
+  onAudit
 }) {
   const t = useT();
-  const [localIdentities, setLocalIdentities] = useState([]);
-  const identities = liveIdentities.length > 0 ? liveIdentities : localIdentities;
+  const identities = liveIdentities;
   const [selectedIds, setSelectedIds] = useState([]);
   const [form, setForm] = useState(EMPTY_IDENTITY);
   const [note, setNote] = useState('');
-  const [localNotes, setLocalNotes] = useState([]);
   const [lastResult, setLastResult] = useState(null);
   const [lastComparisonId, setLastComparisonId] = useState('');
   const [assistantResult, setAssistantResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const viewedLogged = useRef(false);
 
-  const notes = liveNotes.length > 0 ? liveNotes : localNotes;
+  const notes = liveNotes;
   const selectedIdentities = useMemo(() => identities.filter((identity) => selectedIds.includes(identity.id)), [identities, selectedIds]);
   const graphEdges = useMemo(() => {
     const selectedSet = new Set(selectedIds);
@@ -182,9 +177,6 @@ export function BehavioralIdentityGraph({
       if (onCreateIdentity) {
         const ok = await onCreateIdentity(identity);
         if (!ok) return;
-      } else {
-        setLocalIdentities((items) => [identity, ...items]);
-        setSelectedIds((items) => [...new Set([identity.id, ...items])].slice(0, 4));
       }
     } finally {
       setSubmitting(false);
@@ -207,16 +199,12 @@ export function BehavioralIdentityGraph({
       } finally {
         setSubmitting(false);
       }
-    } else {
-      onAudit?.('identity comparison created', `${selectedIdentities.length}`);
-      onAudit?.('similarity score generated', `${result.overall_similarity_score}%`);
     }
   };
 
   const addNote = async () => {
     const clean = sanitizeText(note);
     if (!clean || !lastResult) return;
-    const entry = { id: `note-${Date.now()}`, text: clean, score: lastResult.overall_similarity_score, createdAt: new Date().toLocaleString() };
     setSubmitting(true);
     try {
       if (onAddAnalysisNote) {
@@ -226,10 +214,6 @@ export function BehavioralIdentityGraph({
           metadata: { score: lastResult.overall_similarity_score }
         });
         if (!ok) return;
-      } else {
-        setLocalNotes((items) => [entry, ...items]);
-        onAudit?.('analyst note added', clean);
-        onEvidenceNote?.('behavioral identity analyst note', clean);
       }
     } finally {
       setSubmitting(false);
@@ -298,7 +282,7 @@ export function BehavioralIdentityGraph({
             <label><span>{t('behavioral.username')}</span><input value={form.username} onChange={(event) => updateForm('username', event.target.value)} required /></label>
             <label><span>{t('behavioral.deviceHint')}</span><input value={form.device_hint} onChange={(event) => updateForm('device_hint', event.target.value)} /></label>
             <label><span>{t('behavioral.typingProfileId')}</span><input value={form.typing_profile_id} onChange={(event) => updateForm('typing_profile_id', event.target.value)} /></label>
-            <label><span>{t('behavioral.activityTimes')}</span><input value={form.activity_times} onChange={(event) => updateForm('activity_times', event.target.value)} placeholder="08:00, 20:00, 21:00" /></label>
+            <label><span>{t('behavioral.activityTimes')}</span><input value={form.activity_times} onChange={(event) => updateForm('activity_times', event.target.value)} placeholder={t('behavioral.activityTimesPlaceholder')} /></label>
             <label><span>{t('behavioral.languageStyleNotes')}</span><textarea rows={3} value={form.language_style_notes} onChange={(event) => updateForm('language_style_notes', event.target.value)} /></label>
             <label><span>{t('behavioral.knownCaseId')}</span><input value={form.known_case_id} onChange={(event) => updateForm('known_case_id', event.target.value)} /></label>
             <button className="btn primary" type="submit" disabled={submitting}>{submitting ? t('common.saving') : t('behavioral.addAccount')}</button>

@@ -136,6 +136,7 @@ export const ps = {
   warrant: {
     ...en.warrant,
     number: 'د حکم شمېره',
+    numberPlaceholder: 'رسمي حکم نمبر',
     file: 'د محکمې حکم فایل',
     duration: 'د لاسرسي موده',
     start: 'د لاسرسي پیل وخت',
@@ -223,18 +224,14 @@ export const ps = {
     provinceHeat: 'ولایتي حرارت نقشه',
     noProvinceRows: 'تر اوسه له Supabase څخه د ولایت یا سیمې ژوندۍ ریکارډونه نشته.',
     selectedProvince: 'ټاکل شوی ولایت: {{province}}. ژوندۍ خطر جزئیات به د Supabase ولایتي معلوماتو سره ښکاره شي.',
-    loadDemoData: 'نمونه معلومات لوډ کړئ',
-    clearDemoData: 'نمونه معلومات پاک کړئ',
-    testDataLabel: 'TEST DATA',
-    demoDataNotice: 'د Supabase TEST DATA ښودل کېږي، ځکه اصلي ولایتي ریکارډونه نشته.',
-    realDataOverridesDemo: 'اصلي Supabase ریکارډونه شته، نو نمونه ریکارډونه پټ دي.',
     provinces: ['کابل', 'کندهار', 'هرات', 'ننګرهار', 'بلخ', 'غزني', 'هلمند', 'کندز', 'پکتیا', 'فراه', 'بدخشان', 'خوست']
   },
   phone: {
     ...en.phone,
     title: 'نړیوال تلیفون تعقیب',
     notice: 'دا workflow د قانوني ثبت لپاره دی. حقیقي telecom lookup باید د منظور شوي backend provider له لارې وصل شي.',
-    number: 'شمېره',
+      number: 'شمېره',
+      numberPlaceholder: 'نړیواله تلیفون شمېره',
     classify: 'طبقه بندي',
     checking: 'کتل کېږي...',
     minDigits: 'شمېره لږ تر لږه ۵ عددونه غواړي.',
@@ -272,7 +269,6 @@ export const ps = {
     noStatusRows: 'تر اوسه ژوندۍ د خدمت حالت ریکارډونه نشته.',
     sources: {
       live: 'ژوندی',
-      demo: 'ډیمو',
       empty: 'تش'
     },
     errors: {
@@ -343,8 +339,6 @@ export const ps = {
     title: 'د رفتاري هویت نقشه',
     warning: 'دا یوازې تحلیلي ورته‌والي اټکل دی. وروستۍ پرېکړه قانوني څېړنې، د شواهدو کتنې، او اجازه لرونکي انساني تایید ته اړتیا لري.',
     graphLabel: 'د رفتاري هویت ورته‌والي ګراف',
-    sample: 'نمونه',
-    local: 'محلي',
     live: 'ژوندی',
     noLiveIdentities: 'تر اوسه له Supabase څخه د رفتاري هویت ریکارډونه نشته.',
     noLiveNotes: 'تر اوسه له Supabase څخه د هویت تحلیلي یادښتونه نشته.',
@@ -357,6 +351,7 @@ export const ps = {
     deviceHint: 'د وسیلې اشاره',
     typingProfileId: 'د typing پروفایل ID',
     activityTimes: 'د فعالیت وختونه',
+    activityTimesPlaceholder: 'د مجاز فعالیت وخت یادښتونه',
     languageStyleNotes: 'د ژبني سبک یادښتونه',
     knownCaseId: 'د معلومې قضیې ID',
     addAccount: 'حساب اضافه کړئ',
@@ -393,11 +388,6 @@ export const ps = {
       limited: 'نښې محدودې یا کمزورې دي؛ پرتله یوازې د شنونکي کتنې لپاره وساتئ.'
     },
     levels: { high: 'لوړ ورته والی', medium: 'منځنی ورته والی', low: 'ټیټ ورته والی', review: 'انساني کتنې ته اړتیا لري' }
-  },
-  toast: {
-    ...en.toast,
-    demoDataLoaded: 'د نقشې نمونه ریکارډونه Supabase ته لوډ شول.',
-    demoDataCleared: 'د نقشې نمونه ریکارډونه له Supabase څخه پاک شول.'
   },
   face: { title: 'د مخ پېژندنې پایله', requiresBackend: 'د مخ پرتله کول منظور backend provider، مستند قانوني بنسټ، او انساني کتنې ته اړتیا لري.', result: 'په تولیدي حالت کې محلي مخ پرتله کول نه ترسره کېږي.' }
 };

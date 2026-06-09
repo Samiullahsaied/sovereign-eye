@@ -1,44 +1,5 @@
 export const IDENTITY_WARNING = 'This is an analytical similarity estimate only. Final judgment requires legal investigation, evidence review, and authorized human approval.';
 
-export const SAFE_SAMPLE_IDENTITIES = [
-  {
-    id: 'sample-a',
-    account_name: 'Sample Account Alpha',
-    platform: 'Public Forum',
-    username: 'alpha_sample',
-    device_hint: 'Android browser',
-    typing_profile_id: 'typing-sample-01',
-    activity_times: '20:00,21:00,22:00',
-    language_style_notes: 'Short operational phrases, formal Pashto, repeated time references.',
-    known_case_id: 'CASE-SAMPLE-001',
-    dataMode: 'sample'
-  },
-  {
-    id: 'sample-b',
-    account_name: 'Sample Account Bravo',
-    platform: 'Messaging Channel',
-    username: 'bravo_sample',
-    device_hint: 'Android browser',
-    typing_profile_id: 'typing-sample-02',
-    activity_times: '20:30,21:15,23:00',
-    language_style_notes: 'Formal Pashto wording, short sentences, repeated time references.',
-    known_case_id: 'CASE-SAMPLE-001',
-    dataMode: 'sample'
-  },
-  {
-    id: 'sample-c',
-    account_name: 'Sample Account Charlie',
-    platform: 'Social Platform',
-    username: 'charlie_sample',
-    device_hint: 'Desktop browser',
-    typing_profile_id: 'typing-sample-03',
-    activity_times: '08:00,13:00,18:00',
-    language_style_notes: 'Longer mixed-language notes and less frequent time references.',
-    known_case_id: 'CASE-SAMPLE-002',
-    dataMode: 'sample'
-  }
-];
-
 function clampScore(value) {
   return Math.max(0, Math.min(100, Math.round(value)));
 }

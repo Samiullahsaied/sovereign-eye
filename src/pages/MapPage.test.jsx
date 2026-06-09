@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '../i18n/index.jsx';
 import { MapPage } from './MapPage.jsx';
@@ -14,61 +14,39 @@ function renderMap(ui) {
   return render(<I18nProvider lang="en">{ui}</I18nProvider>);
 }
 
-describe('MapPage demo province controls', () => {
-  it('renders demo controls and marks seeded province rows as test data', () => {
-    const onLoadDemoData = vi.fn();
-    const onClearDemoData = vi.fn();
-
-    renderMap(
-      <MapPage
-        points={[{
-          id: 'demo-kabul',
-          region: 'Kabul',
-          city: 'Kabul',
-          loc: [34.5553, 69.2075],
-          risk: 'high',
-          isTestData: true
-        }]}
-        onLoadDemoData={onLoadDemoData}
-        onClearDemoData={onClearDemoData}
-      />
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Load Demo Data' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Clear Demo Data' }));
-
-    expect(onLoadDemoData).toHaveBeenCalledTimes(1);
-    expect(onClearDemoData).toHaveBeenCalledTimes(1);
-    expect(screen.getByText('Showing Supabase TEST DATA because no real province records exist.')).toBeInTheDocument();
-    expect(screen.getAllByText(/TEST DATA/).length).toBeGreaterThan(0);
-  });
-
-  it('hides demo rows when real Supabase province records exist', () => {
+describe('MapPage live province records', () => {
+  it('renders heatmap rows from live Supabase traffic records only', () => {
     renderMap(
       <MapPage
         points={[
           {
-            id: 'demo-kabul',
+            id: 'traffic-kabul-1',
             region: 'Kabul',
             city: 'Kabul',
             loc: [34.5553, 69.2075],
-            risk: 'high',
-            isTestData: true
+            risk: 'high'
           },
           {
-            id: 'real-herat',
+            id: 'traffic-kabul-2',
+            region: 'Kabul',
+            city: 'Kabul',
+            loc: [34.5553, 69.2075],
+            risk: 'medium'
+          },
+          {
+            id: 'traffic-herat-1',
             region: 'Herat',
             city: 'Herat',
             loc: [34.3529, 62.204],
-            risk: 'normal',
-            isTestData: false
+            risk: 'normal'
           }
         ]}
       />
     );
 
-    expect(screen.getByText('Real Supabase records are available, so demo records are hidden.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Kabul \(2\)/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Herat \(1\)/ })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Kabul/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Load Demo Data/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/TEST DATA/i)).not.toBeInTheDocument();
   });
 });

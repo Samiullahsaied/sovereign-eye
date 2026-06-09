@@ -124,6 +124,7 @@ export const ar = {
     ...fa.warrant,
     pageTitle: 'الأوامر القانونية',
     number: 'رقم الأمر',
+    numberPlaceholder: 'رقم الأمر الرسمي',
     file: 'ملف أمر المحكمة',
     duration: 'مدة الوصول',
     start: 'وقت بدء الوصول',
@@ -149,12 +150,22 @@ export const ar = {
     provinceHeat: 'خريطة حرارة الولايات',
     noProvinceRows: 'لا توجد سجلات حية للولاية أو المنطقة من Supabase بعد.',
     selectedProvince: 'الولاية المحددة: {{province}}. ستظهر تفاصيل المخاطر الحية عند توفر بيانات الولاية في Supabase.',
-    loadDemoData: 'تحميل بيانات تجريبية',
-    clearDemoData: 'مسح البيانات التجريبية',
-    testDataLabel: 'TEST DATA',
-    demoDataNotice: 'يتم عرض TEST DATA من Supabase لأنه لا توجد سجلات ولاية حقيقية.',
-    realDataOverridesDemo: 'توجد سجلات Supabase حقيقية، لذلك تم إخفاء السجلات التجريبية.',
     provinces: ['كابل', 'قندهار', 'هرات', 'ننكرهار', 'بلخ', 'غزنة', 'هلمند', 'قندوز', 'بكتيا', 'فراه', 'بدخشان', 'خوست']
+  },
+  phone: {
+    ...fa.phone,
+    title: 'تتبع الهاتف الدولي',
+    number: 'الرقم',
+    numberPlaceholder: 'رقم هاتف دولي',
+    classify: 'تصنيف',
+    checking: 'جار التحقق...',
+    internationalFormat: 'الصيغة الدولية',
+    localFormat: 'الصيغة المحلية',
+    carrier: 'شركة الاتصالات',
+    lineType: 'نوع الخط',
+    validity: 'الصلاحية',
+    location: 'الموقع',
+    noLocation: 'لا يوفر Numverify API معلومات الموقع لهذا الرقم.'
   },
   health: {
     title: 'حالة النظام',
@@ -171,7 +182,6 @@ export const ar = {
     noStatusRows: 'لا توجد سجلات حالة خدمة حية بعد.',
     sources: {
       live: 'حي',
-      demo: 'تجريبي',
       empty: 'فارغ'
     },
     errors: {
@@ -236,6 +246,7 @@ export const ar = {
     username: 'اسم المستخدم',
     deviceHint: 'إشارة الجهاز',
     activityTimes: 'أوقات النشاط',
+    activityTimesPlaceholder: 'ملاحظات أوقات النشاط المصرح بها',
     languageStyleNotes: 'ملاحظات الأسلوب اللغوي',
     addAccount: 'إضافة حساب',
     similarityResult: 'نتيجة التشابه',
@@ -245,9 +256,4 @@ export const ar = {
     analystNote: 'ملاحظة المحلل',
     attachNote: 'إرفاق الملاحظة'
   },
-  toast: {
-    ...fa.toast,
-    demoDataLoaded: 'تم تحميل سجلات الخريطة التجريبية إلى Supabase.',
-    demoDataCleared: 'تم مسح سجلات الخريطة التجريبية من Supabase.'
-  }
 };

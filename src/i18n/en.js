@@ -140,6 +140,7 @@ export const en = {
   },
   warrant: {
     number: 'Warrant number',
+    numberPlaceholder: 'Official warrant number',
     file: 'Court order file',
     duration: 'Access duration',
     start: 'Access start time',
@@ -241,17 +242,13 @@ export const en = {
     provinceHeat: 'Province heat map',
     noProvinceRows: 'No live province or region records are available from Supabase yet.',
     selectedProvince: 'Selected province: {{province}}. Live risk details will appear when Supabase status rows include province-level data.',
-    loadDemoData: 'Load Demo Data',
-    clearDemoData: 'Clear Demo Data',
-    testDataLabel: 'TEST DATA',
-    demoDataNotice: 'Showing Supabase TEST DATA because no real province records exist.',
-    realDataOverridesDemo: 'Real Supabase records are available, so demo records are hidden.',
     provinces: ['Kabul', 'Kandahar', 'Herat', 'Nangarhar', 'Balkh', 'Ghazni', 'Helmand', 'Kunduz', 'Paktia', 'Farah', 'Badakhshan', 'Khost']
   },
   phone: {
     title: 'International phone tracking',
     notice: 'This workflow is for legal recording. Real telecom lookup must be connected through an approved backend provider.',
     number: 'Number',
+    numberPlaceholder: 'International phone number',
     classify: 'Classify',
     checking: 'Checking...',
     minDigits: 'Number requires at least 5 digits.',
@@ -339,7 +336,6 @@ export const en = {
     noStatusRows: 'No live service status records are available yet.',
     sources: {
       live: 'live',
-      demo: 'demo',
       empty: 'empty'
     },
     errors: {
@@ -429,8 +425,6 @@ export const en = {
     title: 'Behavioral Identity Graph',
     warning: 'This is an analytical similarity estimate only. Final judgment requires legal investigation, evidence review, and authorized human approval.',
     graphLabel: 'Behavioral identity similarity graph',
-    sample: 'sample',
-    local: 'local',
     live: 'live',
     noLiveIdentities: 'No behavioral identity records are available from Supabase yet.',
     noLiveNotes: 'No identity analysis notes are available from Supabase yet.',
@@ -443,6 +437,7 @@ export const en = {
     deviceHint: 'Device hint',
     typingProfileId: 'Typing profile ID',
     activityTimes: 'Activity times',
+    activityTimesPlaceholder: 'Authorized activity time notes',
     languageStyleNotes: 'Language style notes',
     knownCaseId: 'Known case ID',
     addAccount: 'Add account',
@@ -502,8 +497,6 @@ export const en = {
     supabaseRequired: 'Supabase connection is required for this action.',
     supabaseWriteFailed: 'Supabase write failed.',
     supabaseDeleteFailed: 'Supabase delete failed.',
-    demoDataLoaded: 'Demo map records loaded into Supabase.',
-    demoDataCleared: 'Demo map records cleared from Supabase.',
     accessRevoked: 'Legal access has been revoked.',
     accessExpired: 'Legal access window expired. Sensitive actions are blocked.',
     alertAckFailed: 'Alert acknowledgement failed.',

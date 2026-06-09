@@ -121,7 +121,7 @@ export function PhonePage({ warrant, onBeforeClassify, onClassify }) {
     <Card title={t('phone.title')}>
       <div className="notice">{t('phone.notice')}</div>
       <form className="inline-form" onSubmit={submit}>
-        <label><span>{t('phone.number')}</span><input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+93 700 000 000" inputMode="tel" disabled={loading} /></label>
+        <label><span>{t('phone.number')}</span><input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder={t('phone.numberPlaceholder')} inputMode="tel" disabled={loading} /></label>
         <button className="btn primary" type="submit" disabled={loading}><PhoneCall /> {loading ? t('phone.checking') : t('phone.classify')}</button>
       </form>
       {error && <p className="form-error">{error}</p>}
